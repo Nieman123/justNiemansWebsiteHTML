@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Page Not Found — Just Nieman</title>
+  <meta name="description" content="404 — The page you’re looking for doesn’t exist." />
+  <meta property="og:title" content="404 — Just Nieman">
+  <meta property="og:description" content="Looks like you took a wrong turn on the dancefloor.">
+  <meta property="og:image" content="assets/gallery/1.jpg">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/just-nieman-logo-inverted.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-VG487FGV17"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);} 
+    gtag('js', new Date());
+    gtag('config', 'G-VG487FGV17');
+  </script>
+  <style>
+    .nf-wrap{width:min(760px, 92%); margin:0 auto; padding:48px 0 100px; text-align:center}
+    .nf-card{background:rgba(14,14,18,.55); border:1px solid rgba(255,255,255,.06); border-radius:22px; box-shadow:var(--shadow); padding:28px}
+    .nf-title{font-size:clamp(48px, 10vw, 96px); line-height:1; margin:6px 0 8px; letter-spacing:2px}
+    .nf-sub{color:#cfcfda; margin:0 0 18px}
+  </style>
+</head>
+<body class="has-dock">
+  <div class="site-bg"></div>
+
+  <main class="nf-wrap" role="main">
+    <section class="nf-card" aria-labelledby="nf-title">
+      <h1 id="nf-title" class="nf-title">404</h1>
+      <p class="nf-sub">Looks like you took a wrong turn on the dancefloor.</p>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
+        <a href="/" class="btn pill">Take Me Home</a>
+        <a href="/links.html" class="btn ghost">Links</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Docked bottom nav (same as other pages) -->
+  <nav class="dock-nav" aria-label="Site navigation">
+    <div class="dock-inner">
+      <a class="dock-brand" href="/">
+        <img src="assets/just-nieman-logo-inverted.png" alt="JN" />
+      </a>
+      <div class="dock-links" role="menubar">
+        <a class="pill-link" href="/index.html#releases" role="menuitem">Releases</a>
+        <a class="pill-link" href="/index.html#contact" role="menuitem">Contact</a>
+        <a class="pill-link" href="/links.html" role="menuitem">Links</a>
+        <a class="pill-link" href="https://pluto.events?utm_source=site&utm_medium=nav&utm_campaign=dock" role="menuitem">Pluto Events</a>
+      </div>
+      <a class="pill-link pill-cta" href="/assets/JustNieman-EPK.pdf" role="menuitem" download rel="noopener">EPK</a>
+      <div class="dock-social">
+        <a href="https://instagram.com/justnieman" target="_blank" rel="noopener" aria-label="Instagram">
+          <img class="dock-ic" src="assets/Instagram.webp" alt="" aria-hidden="true" />
+        </a>
+        <a href="https://soundcloud.com/justnieman" target="_blank" rel="noopener" aria-label="SoundCloud">
+          <img class="dock-ic" src="assets/soundcloud-logo.png" alt="" aria-hidden="true" />
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <footer class="container footer">
+    <nav class="footer-legal" aria-label="Legal">
+      <a class="tiny-link" href="/privacy.html">Privacy</a>
+      <span class="dot">•</span>
+      <a class="tiny-link" href="https://pluto.events?utm_source=site&utm_medium=footer&utm_campaign=legal">Pluto Events</a>
+      <span class="dot">•</span>
+      <a class="tiny-link" href="/tos.html">Terms</a>
+    </nav>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

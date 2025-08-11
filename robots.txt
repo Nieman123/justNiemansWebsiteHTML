@@ -1,0 +1,10 @@
+
+
+# robots.txt for niemans.website
+User-agent: *
+Allow: /
+
+# Disallow common junk (none currently)
+# Disallow: /admin/
+
+Sitemap: https://just.niemans.website/sitemap.xml
