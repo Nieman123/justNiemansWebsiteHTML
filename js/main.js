@@ -177,3 +177,14 @@ const GALLERY_ITEMS = [
   startTimer();
   if(toggle){ toggle.addEventListener('click', ()=>{ expanded = !expanded; applyAbout(); }); }
 })();
+
+// Track site interaction events with Google Analytics
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('a, button, .thumb');
+  if (!el || typeof gtag !== 'function') return;
+  let label = el.getAttribute('href') || el.getAttribute('alt') || el.id || (el.textContent || '').trim();
+  gtag('event', 'interaction', {
+    event_category: 'site',
+    event_label: label
+  });
+});
