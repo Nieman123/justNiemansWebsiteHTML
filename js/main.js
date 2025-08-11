@@ -198,3 +198,19 @@ document.addEventListener('click', (e) => {
     event_label: label
   });
 });
+
+// Ensure UTM tagging on Links page
+(function(){
+  if (!document.body.classList.contains('links-body')) return;
+  const params = new URLSearchParams({ utm_source: 'links', utm_medium: 'website', utm_campaign: 'links_page' });
+  document.querySelectorAll('.links-list a[href^="http"]').forEach(a => {
+    try{
+      const u = new URL(a.href);
+      // Only append if not already present
+      if (!u.searchParams.has('utm_source')){
+        params.forEach((v,k)=>{ u.searchParams.set(k, v); });
+        a.href = u.toString();
+      }
+    }catch(e){ /* ignore malformed */ }
+  });
+})();
