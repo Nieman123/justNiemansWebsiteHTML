@@ -1,3 +1,81 @@
+(function(){
+  // --- Flowing purple background (metaball gradients) ---
+  (function(){
+    const holder = document.querySelector('.site-bg') || document.body;
+    const c = document.createElement('canvas');
+    c.id = 'bg-canvas';
+    holder.appendChild(c);
+    const ctx = c.getContext('2d');
+
+    let W = 0, H = 0, DPR = Math.min(2, window.devicePixelRatio || 1);
+    function resize(){
+      W = Math.floor(window.innerWidth * DPR);
+      H = Math.floor(window.innerHeight * DPR);
+      c.width = W; c.height = H;
+      c.style.width = '100%'; c.style.height = '100%';
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const RAND = (min,max)=> min + Math.random()*(max-min);
+    const TAU = Math.PI*2;
+    const BLOBS = Array.from({length: 8}, (_,i)=>({
+      r: RAND(140, 260) * DPR,
+      x: RAND(0, W),
+      y: RAND(0, H),
+      sp: RAND(.0008, .0016),
+      ang: RAND(0, TAU),
+      off: RAND(0, 1000),
+      hue: RAND(270, 305), // purple range
+    }));
+
+    let mouseX = 0.5, mouseY = 0.5;
+    window.addEventListener('mousemove', (e)=>{
+      mouseX = e.clientX / window.innerWidth;
+      mouseY = e.clientY / window.innerHeight;
+    });
+
+    function ease(a,b,t){ return a + (b-a)*t; }
+
+    let t0 = performance.now();
+    function frame(now){
+      const dt = (now - t0) * 0.001; // seconds
+      t0 = now;
+
+      ctx.clearRect(0,0,W,H);
+      ctx.globalCompositeOperation = 'lighter';
+
+      for(const b of BLOBS){
+        // Lazy pseudo-noise orbiting
+        b.ang += b.sp * (1 + 0.4*Math.sin((now*0.0003)+b.off));
+        const rad = 0.18 + 0.08*Math.sin((now*0.0002)+b.off);
+        const cx = ease(b.x, (0.5 + 0.35*Math.cos(b.ang+b.off))*W, 0.06);
+        const cy = ease(b.y, (0.5 + 0.35*Math.sin(b.ang-b.off))*H, 0.06);
+        b.x = cx + (mouseX-0.5)*W*0.002;
+        b.y = cy + (mouseY-0.5)*H*0.002;
+
+        const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r*(0.9+rad));
+        const h1 = b.hue;
+        const h2 = b.hue + 25;
+        g.addColorStop(0, `hsla(${h1}, 95%, 62%, .65)`);
+        g.addColorStop(.55, `hsla(${h2}, 85%, 45%, .28)`);
+        g.addColorStop(1, 'hsla(260, 70%, 8%, 0)');
+
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, TAU);
+        ctx.fill();
+      }
+
+      ctx.globalCompositeOperation = 'source-over';
+      requestAnimationFrame(frame);
+    }
+
+    if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      requestAnimationFrame(frame);
+    }
+  })();
+  })();
 // --- Gallery items ---
 const GALLERY_ITEMS = [
   ['assets/gallery/1.jpg', 'Memories at The Getaway'],
@@ -80,7 +158,7 @@ const GALLERY_ITEMS = [
 
   function goTo(idx){ if(idx===i) return; slideSwap(idx); i = idx; markActiveThumb(); }
   function next(){ goTo((i+1) % GALLERY_ITEMS.length); }
-  function startTimer(){ if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){ timer = setInterval(next, 5000); } }
+  function startTimer(){ if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){ timer = setInterval(next, 7000); } }
   function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
   function pauseThenResume(){ stopTimer(); setTimeout(startTimer, 12000); }
 
