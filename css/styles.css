@@ -55,7 +55,6 @@ body{
 .gallery-main img{ width:100%; height:100%; object-fit:cover; object-position:center; display:block;}
 
 .slide-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; opacity:0; transform:translateX(10%); transition: transform .45s cubic-bezier(.22,.61,.36,1), opacity .45s cubic-bezier(.22,.61,.36,1); }
-.slide-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; opacity:0; transform:translateX(10%); transition: transform .45s cubic-bezier(.22,.61,.36,1), opacity .45s cubic-bezier(.22,.61,.36,1); }
 .slide-img.is-active{ opacity:1; transform:translateX(0); z-index:1 }
 .slide-img.to-left{ opacity:0; transform:translateX(-10%) }
 
@@ -63,7 +62,6 @@ body{
 .caption{ position:absolute; left:0; right:0; bottom:0; padding:10px 14px; font-size:.9rem; color:#eaeaf0; background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.65) 100%); }
 
 /* Thumbnails */
-.gallery-thumbs{ display:grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap:10px; }
 .gallery-thumbs{ display:grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap:10px; justify-items: center;}
 .thumb{ width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px; box-shadow:var(--shadow); cursor:pointer; opacity:.9; transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;}
 .thumb:hover{ transform:translateY(-2px); opacity:1 }
@@ -82,8 +80,9 @@ body{
 .jn-mark{width:100%; height:auto; display:block; filter:drop-shadow(0 8px 24px rgba(0,0,0,.45));}
 .muted{color:var(--muted)}
 .location{font-weight:700; letter-spacing:.6px}
-.contact-actions{display:grid; grid-template-columns: 1fr; gap:14px; margin-top:18px; max-width:420px}
-.contact-actions{display:grid; grid-template-columns: 1fr; gap:14px; margin-top:18px; max-width:420px; justify-items: end; text-align:right;}
+.contact-right{ display:flex; flex-direction:column; align-items:flex-end; }
+.contact-actions{ display:flex; flex-direction:column; align-items:flex-end; gap:12px; }
+
 /* Buttons */
 .btn{--p: var(--accent-1); --q: var(--accent-2); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:.6rem; border:none; text-decoration:none; font-weight:800; letter-spacing:.6px; text-transform:uppercase;}
 .btn.pill{--p: #a855f7; --q: #a855f7; padding:.6rem 1.2rem; border-radius:999px; background:linear-gradient(135deg, var(--p), var(--q)); color:white; box-shadow:0 8px 24px rgba(0,0,0,.35)}

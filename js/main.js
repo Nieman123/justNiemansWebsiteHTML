@@ -6,6 +6,7 @@
     c.id = 'bg-canvas';
     holder.appendChild(c);
     const ctx = c.getContext('2d');
+    c.setAttribute('aria-hidden','true'); c.setAttribute('role','presentation');
 
     let W = 0, H = 0, DPR = Math.min(2, window.devicePixelRatio || 1);
     function resize(){
@@ -38,7 +39,15 @@
     function ease(a,b,t){ return a + (b-a)*t; }
 
     let t0 = performance.now();
+
+    let running = true;
+    document.addEventListener('visibilitychange', () => {
+      running = !document.hidden;
+      if (running) requestAnimationFrame(frame);
+    });
+
     function frame(now){
+      if (!running) return;
       const dt = (now - t0) * 0.001; // seconds
       t0 = now;
 
@@ -106,6 +115,7 @@ const GALLERY_ITEMS = [
       t.alt = item[1];
       t.className = 'thumb' + (idx===i ? ' active' : '');
       t.setAttribute('role','listitem');
+      t.setAttribute('loading', 'lazy');
       t.addEventListener('click', ()=>{ goTo(idx); pauseThenResume(); });
       thumbsWrap.appendChild(t);
     });
