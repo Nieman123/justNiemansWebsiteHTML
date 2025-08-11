@@ -7,9 +7,8 @@
   <meta name="description" content="Just Nieman is a multi‑genre EDM producer and DJ based in Asheville, NC. Producer of 'Lives', 'Personal', and 'My Music'." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Display font for the wordmark, body UI font for everything else -->
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
   <div class="site-bg"></div>
@@ -17,59 +16,63 @@
     <div class="hero-left">
       <img class="logo-wordmark" src="assets/just-nieman-logo-wide-inverted.png" alt="Just Nieman" />
       <p class="tag">Multi-genre EDM producer and DJ</p>
+
+      <!-- Bio lives in hero -->
+      <section class="about about-hero" aria-label="About Just Nieman">
+        <div class="about-content" id="aboutContent">
+          <p>
+            Just Nieman is a multi-genre EDM producer and DJ based in Asheville, NC. Since stepping into the scene in 2013, he’s gone from throwing house parties to holding down club residencies and launching his own event production company, Pluto Events. His style blends community roots with club energy—curating sets that move both feet and hearts.
+          </p>
+          <p>
+            In 2021, he landed his first residency at Asheville Beauty Academy, a turning point that sharpened his live performance and deepened his ties to the local scene. With Pluto Events, he’s championed rising artists and created a platform for authentic expression in Asheville’s EDM community.
+          </p>
+          <p>
+            As a producer, Just Nieman has dropped singles like “Lives,” “Personal,” and “My Music,” each revealing a new side of his evolving sound. He’s not just playing tracks—he’s building experiences. Fueled by passion and community, Just Nieman is on a mission to push boundaries and keep dance culture alive and personal.
+          </p>
+        </div>
+        <div class="about-actions">
+          <button class="btn pill" id="aboutToggle" aria-expanded="false" aria-controls="aboutContent">Show More</button>
+        </div>
+      </section>
     </div>
 
-    <!-- Gallery: big image + two stacked thumbs, auto-rotating -->
+    <!-- Gallery: 16:9 main + thumbs under -->
     <aside class="hero-gallery" aria-label="Photo gallery">
       <figure class="gallery-main">
-        <img id="g-main" src="assets/gallery/1.jpg" alt="Memories at The Getaway" />
+        <img id="g-main-a" class="slide-img is-active" src="assets/gallery/1.jpg" alt="Memories at The Getaway" />
+        <img id="g-main-b" class="slide-img" alt="" />
         <figcaption id="g-cap" class="caption">Memories at The Getaway</figcaption>
       </figure>
-      <div class="gallery-side">
-        <img id="g-side-top" src="assets/gallery/2.jpg" alt="Afters?" />
-        <img id="g-side-bottom" src="assets/gallery/3.jpg" alt="Loading up a track that will be just right." />
+      <!-- Fallback thumbs (JS will rebuild these dynamically) -->
+      <div class="gallery-thumbs" id="gallery-thumbs" role="list">
+        <img class="thumb" src="assets/gallery/2.jpg" alt="Afters?" role="listitem" />
+        <img class="thumb" src="assets/gallery/3.jpg" alt="Loading up a track that will be just right." role="listitem" />
+        <img class="thumb" src="assets/gallery/4.jpg" alt="Times at Water Street (White Rabbit)" role="listitem" />
+        <img class="thumb" src="assets/gallery/5.jpg" alt="Memories at The Getaway" role="listitem" />
+        <img class="thumb" src="assets/gallery/2.webp" alt="At Static Age Loft" role="listitem" />
       </div>
     </aside>
   </header>
 
   <main class="container content" id="content" role="main">
-    <section class="about">
-      <p>
-        Just Nieman is a multi-genre EDM producer and DJ based in Asheville, NC. Since stepping into the scene in 2013, he’s gone from throwing house parties to holding down club residencies and launching his own event production company, Pluto Events. His style blends community roots with club energy—curating sets that move both feet and hearts.
-      </p>
-      <p>
-        In 2021, he landed his first residency at Asheville Beauty Academy, a turning point that sharpened his live performance and deepened his ties to the local scene. With Pluto Events, he’s championed rising artists and created a platform for authentic expression in Asheville’s EDM community.
-      </p>
-      <p>
-        As a producer, Just Nieman has dropped singles like “Lives,” “Personal,” and “My Music,” each revealing a new side of his evolving sound. He’s not just playing tracks—he’s building experiences. Fueled by passion and community, Just Nieman is on a mission to push boundaries and keep dance culture alive and personal.
-      </p>
-      <div class="about-actions">
-        <button class="btn pill" id="aboutToggle" aria-expanded="true" aria-controls="content">Show Less</button>
-      </div>
-    </section>
-
     <section class="releases" aria-labelledby="releases-heading">
       <h2 id="releases-heading" class="section-title">NEWEST RELEASES</h2>
       <div class="release-grid">
-        <!-- Card 1 -->
         <article class="card">
           <header class="card-header">“IT'S NOT THAT DEEP”</header>
           <img class="card-art" src="assets/its-not-that-deep.png" alt="Cover art for It's Not That Deep" />
           <a class="btn ghost" href="#" target="_blank" rel="noopener">CLICK TO LISTEN</a>
         </article>
-        <!-- Card 2 -->
         <article class="card">
           <header class="card-header">“MY MUSIC”</header>
           <img class="card-art" src="assets/my-music.webp" alt="Cover art for My Music" />
           <a class="btn ghost" href="#" target="_blank" rel="noopener">CLICK TO LISTEN</a>
         </article>
-        <!-- Card 3 -->
         <article class="card">
           <header class="card-header">“LIVES”</header>
           <img class="card-art" src="assets/lives.webp" alt="Cover art for Lives" />
           <a class="btn ghost" href="#" target="_blank" rel="noopener">CLICK TO LISTEN</a>
         </article>
-        <!-- Card 4 -->
         <article class="card">
           <header class="card-header">“PERSONAL”</header>
           <img class="card-art" src="assets/personal.webp" alt="Cover art for Personal" />
@@ -103,9 +106,9 @@
   </main>
 
   <footer class="container footer">
-    <a class="tiny-link" href="/links.html">Links page</a>
+    <a class="tiny-link" href="links.html">Links page</a>
   </footer>
 
-  <script src="/js/main.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
