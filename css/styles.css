@@ -1,3 +1,21 @@
+/* Docked bottom nav */
+.dock-nav{position:fixed; left:0; right:0; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:9999; display:flex; justify-content:center; pointer-events:none;}
+.dock-inner{pointer-events:auto; display:flex; align-items:center; gap:12px; width:min(960px,92%); padding:10px 12px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background:rgba(19,19,24,.6); backdrop-filter:blur(12px) saturate(120%); box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.dock-brand{display:inline-flex; align-items:center;}
+.dock-brand img{width:32px; height:32px; display:block; object-fit:contain; filter:drop-shadow(0 2px 8px rgba(0,0,0,.35))}
+.dock-links{display:flex; align-items:center; gap:8px; flex:1 1 auto; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none}
+.dock-links::-webkit-scrollbar{display:none}
+.pill-link{display:inline-flex; align-items:center; justify-content:center; padding:.46rem .85rem; border-radius:999px; font-weight:800; letter-spacing:.6px; text-decoration:none; color:#fff; background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.14); white-space:nowrap}
+.pill-link:hover{background:rgba(255,255,255,.18)}
+.dock-social{display:flex; align-items:center; gap:10px}
+.dock-ic{width:22px; height:22px; display:block; object-fit:contain; filter:invert(1) brightness(100)}
+
+/* Body padding so dock doesn't overlap content */
+body.has-dock{padding-bottom:96px}
+
+/* Footer legal */
+.footer-legal{display:flex; gap:10px; justify-content:center; align-items:center; color:#9aa0b3}
+.footer-legal .dot{opacity:.6}
 :root{
   --bg-1: #0a0711;           /* deep plum */
   --bg-2: #20102e;           /* aubergine */
@@ -129,4 +147,9 @@ body{
   .release-grid{grid-template-columns: 1fr}
   .link-btn{ padding:26px 20px; font-size:18px; border-radius:20px }
   .link-ic{ width:68px; height:68px; border-radius:10px }
+  .dock-inner{gap:8px; padding:8px 10px; border-radius:14px}
+  .dock-brand img{width:28px; height:28px}
+  .pill-link{padding:.44rem .72rem; font-size:.9rem}
+  .dock-ic{width:20px; height:20px}
+  body.has-dock{padding-bottom:110px}
 }

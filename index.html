@@ -24,7 +24,7 @@
     gtag('config', 'G-VG487FGV17');
   </script>
 </head>
-<body>
+<body class="has-dock">
   <div class="site-bg"></div>
   <header class="container hero" role="banner">
     <div class="hero-left">
@@ -35,13 +35,13 @@
       <section class="about about-hero" aria-label="About Just Nieman">
         <div class="about-content" id="aboutContent">
           <p>
-            Just Nieman is an Asheville-based multi‑genre EDM producer, DJ, and event curator with deep roots in building community on the dancefloor. Since first stepping behind the decks in 2013, he’s gone from throwing DIY house parties to holding down club residencies and running his own event production company, Pluto Events.
+            Just Nieman is an Asheville-based artist known for turning dancefloors into tight-knit, high-energy communities. Since first stepping behind the decks in 2013, he’s gone from throwing DIY house parties to holding down club residencies and running his own event production company, Pluto Events.
           </p>
           <p>
-            Known for his high‑energy sets that blend underground grit with feel‑good club euphoria, Just Nieman crafts experiences designed to connect people. With Pluto Events, he’s created a platform that champions emerging artists, nurtures Asheville’s electronic scene, and brings together crowds for nights they’ll never forget.
+            Known for his high energy sets that blend underground grit with feel good club euphoria, Just Nieman crafts experiences designed to connect people. With Pluto Events, he’s created a platform that champions emerging artists, nurtures Asheville’s electronic scene, and brings together crowds for nights they’ll never forget.
           </p>
           <p>
-            In the studio, his releases like “Lives,” “Personal,” “My Music,” and “It’s Not That Deep” showcase an evolving sound that crosses genres while staying true to his passion for movement and emotion. For Just Nieman, it’s never just about playing tracks — it’s about telling a story, building a vibe, and making every moment on the floor count.
+            In the studio, his releases like “Lives,” “Personal,” “My Music,” and “It’s Not That Deep” showcase an evolving sound that crosses genres, check below to listen.
           </p>
         </div>
         <div class="about-actions">
@@ -69,7 +69,7 @@
   </header>
 
   <main class="container content" id="content" role="main">
-    <section class="releases" aria-labelledby="releases-heading">
+    <section class="releases" id="releases" aria-labelledby="releases-heading">
       <h2 id="releases-heading" class="section-title">NEWEST RELEASES</h2>
       <div class="release-grid">
         <article class="card">
@@ -95,7 +95,7 @@
       </div>
     </section>
 
-    <section class="contact" aria-labelledby="contact-heading">
+    <section class="contact" id="contact" aria-labelledby="contact-heading">
       <div class="contact-grid">
         <div class="contact-left">
           <img class="jn-mark" src="assets/just-nieman-logo-inverted.png" alt="JN mark" loading="lazy" width="100" height="100" />
@@ -121,8 +121,33 @@
     </section>
   </main>
 
+  <nav class="dock-nav" aria-label="Site navigation">
+    <div class="dock-inner">
+      <a class="dock-brand" href="/">
+        <img src="assets/just-nieman-logo-inverted.png" alt="JN" />
+      </a>
+      <div class="dock-links" role="menubar">
+        <a class="pill-link" href="#releases" role="menuitem">Releases</a>
+        <a class="pill-link" href="#contact" role="menuitem">Contact</a>
+        <a class="pill-link" href="links.html" role="menuitem">Links</a>
+      </div>
+      <div class="dock-social">
+        <a href="https://instagram.com/justnieman" target="_blank" rel="noopener" aria-label="Instagram">
+          <img class="dock-ic" src="assets/Instagram.webp" alt="" aria-hidden="true" />
+        </a>
+        <a href="https://soundcloud.com/just-nieman" target="_blank" rel="noopener" aria-label="SoundCloud">
+          <img class="dock-ic" src="assets/soundcloud-logo.png" alt="" aria-hidden="true" />
+        </a>
+      </div>
+    </div>
+  </nav>
+
   <footer class="container footer">
-    <a class="tiny-link" href="links.html">Links page</a>
+    <nav class="footer-legal" aria-label="Legal">
+      <a class="tiny-link" href="/privacy.html">Privacy</a>
+      <span class="dot">•</span>
+      <a class="tiny-link" href="/tos.html">Terms</a>
+    </nav>
   </footer>
 
   <script src="js/main.js"></script>
