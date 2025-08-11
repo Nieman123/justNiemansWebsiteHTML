@@ -7,7 +7,7 @@
   <meta name="description" content="Just Nieman is a multi‑genre EDM producer and DJ based in Asheville, NC. Producer of 'Lives', 'Personal', and 'My Music'." />
   <meta property="og:title" content="Just Nieman — Multi‑genre EDM producer & DJ">
   <meta property="og:description" content="Just Nieman is a multi‑genre EDM producer and DJ based in Asheville, NC. Producer of 'Lives', 'Personal', and 'My Music'.">
-  <meta property="og:image" content="assets/gallery/1.jpg">
+  <meta property="og:image" content="https://just.niemans.website/assets/gallery/1.jpg">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/just-nieman-logo-inverted.png" type="image/png">
@@ -15,6 +15,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="canonical" href="https://just.niemans.website/">
+  <link rel="preload" as="image" href="assets/just-nieman-logo-wide-inverted.png">
   <link rel="preload" as="image" href="assets/gallery/1.jpg">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-VG487FGV17"></script>
@@ -22,7 +24,7 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);} 
     gtag('js', new Date());
-    gtag('config', 'G-VG487FGV17');
+    gtag('config', 'G-VG487FGV17', { 'anonymize_ip': true });
   </script>
   <link rel="me" href="https://instagram.com/justnieman">
   <script type="application/ld+json">
@@ -30,7 +32,7 @@
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Just Nieman",
-    "url": "https://niemans.website/",
+    "url": "https://just.niemans.website/",
     "sameAs": [
       "https://instagram.com/justnieman",
       "https://soundcloud.com/justnieman",
@@ -69,7 +71,7 @@
     <aside class="hero-gallery" aria-label="Photo gallery">
       <figure class="gallery-main">
         <img id="g-main-a" class="slide-img is-active" src="assets/gallery/1.jpg" alt="Memories at The Getaway" width="640" height="360" />
-        <img id="g-main-b" class="slide-img" alt="" />
+        <img id="g-main-b" class="slide-img" alt="" width="640" height="360" />
         <figcaption id="g-cap" class="caption">Memories at The Getaway</figcaption>
       </figure>
       <!-- Fallback thumbs (JS will rebuild these dynamically) -->
@@ -117,7 +119,6 @@
         </div>
         <div class="contact-right">
           <h2 id="contact-heading" class="section-title">CONTACT</h2>
-        <div style="text-align: right;">
           <p class="muted">Feel free to get in touch</p>
           <p class="location">Asheville, NC</p>
           <p class="muted">Events: <a class="tiny-link" href="https://pluto.events?utm_source=site&utm_medium=contact&utm_campaign=footer_ref">pluto.events</a></p>
@@ -131,7 +132,6 @@
               <span>@justnieman on Insta</span>
             </a>
           </div>
-        </div>
         </div>
       </div>
     </section>
@@ -153,7 +153,7 @@
         <a href="https://instagram.com/justnieman" target="_blank" rel="noopener" aria-label="Instagram">
           <img class="dock-ic" src="assets/Instagram.webp" alt="" aria-hidden="true" />
         </a>
-        <a href="https://soundcloud.com/just-nieman" target="_blank" rel="noopener" aria-label="SoundCloud">
+        <a href="https://soundcloud.com/justnieman" target="_blank" rel="noopener" aria-label="SoundCloud">
           <img class="dock-ic" src="assets/soundcloud-logo.png" alt="" aria-hidden="true" />
         </a>
       </div>

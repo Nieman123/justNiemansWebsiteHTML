@@ -13,7 +13,7 @@
 .dock-ic{width:22px; height:22px; display:block; object-fit:contain; filter:invert(1) brightness(100)}
 
 /* Body padding so dock doesn't overlap content */
-body.has-dock{padding-bottom:96px}
+body.has-dock{ padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 
 /* Footer legal */
 .footer-legal{display:flex; gap:10px; justify-content:center; align-items:center; color:#9aa0b3}
@@ -100,7 +100,7 @@ body{
 .jn-mark{width:100%; height:auto; display:block; filter:drop-shadow(0 8px 24px rgba(0,0,0,.45));}
 .muted{color:var(--muted)}
 .location{font-weight:700; letter-spacing:.6px}
-.contact-right{ display:flex; flex-direction:column; align-items:flex-end; }
+.contact-right{ display:flex; flex-direction:column; align-items:flex-end; text-align:right; }
 .contact-actions{ display:flex; flex-direction:column; align-items:flex-end; gap:12px; }
 
 /* Buttons */
@@ -114,6 +114,12 @@ body{
 .footer{padding:40px 0 80px; text-align:center}
 .tiny-link{color:#cfd0ff; text-decoration:none; font-size:.9rem; opacity:.85}
 .tiny-link:hover{opacity:1}
+
+/* Accessible focus rings */
+.pill-link:focus-visible, .btn:focus-visible{
+  outline:2px solid rgba(255,255,255,.85);
+  outline-offset:2px;
+}
 
 /* LINKS PAGE */
 .links-body{display:grid; place-items:center;}
@@ -153,5 +159,5 @@ body{
   .dock-brand img{width:28px; height:28px}
   .pill-link{padding:.44rem .72rem; font-size:.9rem}
   .dock-ic{width:20px; height:20px}
-  body.has-dock{padding-bottom:110px}
+  body.has-dock{ padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
 }
