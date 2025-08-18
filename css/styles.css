@@ -72,13 +72,14 @@ body{
 /* Gallery: 16:9 main with thumbs below */
 .hero-gallery{ display:grid; grid-template-rows:auto auto; gap:14px; align-self:start; justify-self:end; width:min(960px,100%); }
 .gallery-main{ position:relative; overflow:hidden; border-radius:var(--radius-lg); box-shadow:var(--shadow); height: clamp(420px, 78vh, 820px); background: transparent; }
-.slide-media{ width:100%; height:100%; object-fit:contain; object-position:center; background:transparent; }
+.slide-media{ width:100%; height:100%; object-fit:cover; object-position:center; background:transparent; border-radius:inherit; }
 
 /* Slide layers & transitions for images and video */
 .slide-img, .slide-vid{
   position:absolute; inset:0;
   width:100%; height:100%;
-  object-fit:contain; object-position:center;
+  object-fit:cover; object-position:center;
+  border-radius:inherit;
   opacity:0; transform:translateX(10%);
   transition: transform .45s cubic-bezier(.22,.61,.36,1), opacity .45s cubic-bezier(.22,.61,.36,1);
   background:transparent;
