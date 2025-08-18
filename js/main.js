@@ -93,6 +93,8 @@ const GALLERY_ITEMS = [
   ['assets/gallery/4.jpg', 'Times at Water Street (White Rabbit)'],
   ['assets/gallery/5.jpg', 'Memories at The Getaway'],
   ['assets/gallery/2.webp', 'At Static Age Loft'],
+  // [thumb_or_image_src, caption, optional_video_src]
+  ['assets/gallery/3.jpg', 'Shell crowd moment', 'assets/video/shell.mov']
 ];
 
 (function(){
@@ -100,11 +102,20 @@ const GALLERY_ITEMS = [
   const mainB = document.getElementById('g-main-b');
   const cap   = document.getElementById('g-cap');
   const thumbsWrap = document.getElementById('gallery-thumbs');
+  const galleryMain = document.querySelector('.gallery-main');
 
   let i = 0;
   let active = mainA;
   let standby = mainB;
   let timer = null;
+
+  function removeExistingVideo(){
+    const existingVideo = galleryMain.querySelector('.slide-vid');
+    if(existingVideo){
+      existingVideo.pause();
+      existingVideo.remove();
+    }
+  }
 
   function buildThumbs(){
     if(!thumbsWrap) return;
@@ -114,14 +125,56 @@ const GALLERY_ITEMS = [
       t.src = item[0];
       t.alt = item[1];
       t.className = 'thumb' + (idx===i ? ' active' : '');
+      // If this gallery item specifies a video, tag the thumb
+      if (Array.isArray(item) && item[2]){
+        t.dataset.video = item[2];
+        t.classList.add('video-thumb');
+      }
       t.setAttribute('role','listitem');
       t.setAttribute('loading', 'lazy');
-      t.addEventListener('click', ()=>{ goTo(idx); pauseThenResume(); });
+      // Note: If thumbnail elements have data-video attributes, they should be set in HTML or elsewhere
+      t.addEventListener('click', ()=>{
+        if(t.dataset.video){
+          removeExistingVideo();
+          // Demote the currently active image for a smooth transition
+          const activeEl = galleryMain.querySelector('.slide-img.is-active');
+          if(activeEl){
+            activeEl.classList.remove('is-active');
+            activeEl.classList.add('to-left');
+            setTimeout(()=>activeEl.classList.remove('to-left'), 500);
+          }
+          const video = document.createElement('video');
+          video.src = t.dataset.video;
+          video.className = 'slide-vid slide-media is-active';
+          video.muted = true;
+          video.loop = true;
+          video.playsInline = true;
+          video.autoplay = true;
+          video.setAttribute('aria-label', t.alt || 'Video');
+          galleryMain.appendChild(video);
+          // Update active index and UI state
+          i = idx;
+          stopTimer();
+          setCaption(t.alt || '');
+          markActiveThumb();
+        } else {
+          removeExistingVideo();
+          goTo(idx);
+          pauseThenResume();
+        }
+      });
       thumbsWrap.appendChild(t);
     });
   }
 
-  function setCaption(idx){ if(cap) cap.textContent = GALLERY_ITEMS[idx][1]; }
+  function setCaption(idxOrText){
+    if(!cap) return;
+    if(typeof idxOrText === 'number'){
+      cap.textContent = GALLERY_ITEMS[idxOrText][1];
+    } else {
+      cap.textContent = idxOrText;
+    }
+  }
 
   // Slide animation swap (right → in, left → out)
   function slideSwap(nextIdx){
@@ -166,9 +219,21 @@ const GALLERY_ITEMS = [
     markActiveThumb();
   }
 
-  function goTo(idx){ if(idx===i) return; slideSwap(idx); i = idx; markActiveThumb(); }
-  function next(){ goTo((i+1) % GALLERY_ITEMS.length); }
-  function startTimer(){ if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){ timer = setInterval(next, 7000); } }
+  function goTo(idx){ 
+    if(idx===i) return; 
+    slideSwap(idx); 
+    i = idx; 
+    markActiveThumb(); 
+  }
+  function next(){ 
+    removeExistingVideo();
+    goTo((i+1) % GALLERY_ITEMS.length); 
+  }
+  function startTimer(){ 
+    if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){ 
+      timer = setInterval(next, 7000); 
+    } 
+  }
   function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
   function pauseThenResume(){ stopTimer(); setTimeout(startTimer, 12000); }
 
