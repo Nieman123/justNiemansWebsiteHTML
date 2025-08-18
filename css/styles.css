@@ -163,7 +163,7 @@ body{
 /* Responsive */
 @media (max-width: 900px){
   .hero{grid-template-columns: 1fr;}
-  .hero-gallery{order:2; justify-self:stretch; width:100%}
+  .hero-gallery{order:2; justify-self:center; width:min(960px,100%);}
   .hero-left{order:1}
   .release-grid{grid-template-columns: 1fr 1fr}
   .contact-grid{grid-template-columns: 1fr}
