@@ -230,13 +230,15 @@ const GALLERY_ITEMS = [
     setCaption(i);
     buildThumbs();
     markActiveThumb();
+    showUnmuteBtn(false);
   }
 
-  function goTo(idx){ 
-    if(idx===i) return; 
-    slideSwap(idx); 
-    i = idx; 
-    markActiveThumb(); 
+  function goTo(idx){
+    if(idx===i) return;
+    slideSwap(idx);
+    i = idx;
+    markActiveThumb();
+    showUnmuteBtn(false);
   }
   function next(){ 
     removeExistingVideo();
