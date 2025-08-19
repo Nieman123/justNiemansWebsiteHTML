@@ -87,11 +87,11 @@
   })();
 // --- Gallery items ---
 const GALLERY_ITEMS = [
-  ['assets/gallery/1.jpg', 'Memories at The Getaway'],
-  ['assets/gallery/2.jpg', 'Afters?'],
-  ['assets/gallery/3.jpg', 'Looking for the next track.'],
-  ['assets/gallery/7.jpg', 'At Electric Forest 2025.'],
-  ['assets/gallery/5.jpg', 'Memories at The Getaway'],
+  ['assets/gallery/1.webp', 'Memories at The Getaway'],
+  ['assets/gallery/2.webp', 'Afters?'],
+  ['assets/gallery/3.webp', 'Looking for the next track.'],
+  ['assets/gallery/7.webp', 'At Electric Forest 2025.'],
+  ['assets/gallery/5.webp', 'Memories at The Getaway'],
   ['assets/gallery/2.webp', 'At Static Age Loft'],
   // [thumb_or_image_src, caption, optional_video_src]
   ['assets/video/shell-thumb.jpg', 'Shell crowd moment', 'assets/video/shell.mov']
