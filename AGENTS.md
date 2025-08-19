@@ -13,7 +13,7 @@ Static website for an EDM artist. Pure HTML, CSS, and vanilla JS. No build syste
 │  └─ main.js
 └─ assets/
    ├─ gallery/      # images shown in the homepage gallery
-   ├─ video/        # site videos (e.g., shell.mov) and generated thumbnails
+   ├─ video/        # site videos (e.g., shell.mp4) and generated thumbnails
    ├─ *.png|*.webp  # logos, icons
    └─ ...           # misc site assets
 ```
@@ -88,7 +88,7 @@ To add or change items shown in the hero gallery:
    const GALLERY_ITEMS = [
      ['assets/gallery/1.jpg', 'Memories at The Getaway'],
      // image: [imagePath, caption]
-     ['assets/video/shell-thumb.jpg', 'Shell crowd moment', 'assets/video/shell.mov']
+     ['assets/video/shell-thumb.jpg', 'Shell crowd moment', 'assets/video/shell.mp4']
      // video:  [thumbPath, caption, videoPath]
    ];
    ```
