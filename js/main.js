@@ -94,7 +94,7 @@ const GALLERY_ITEMS = [
   ['assets/gallery/5.jpg', 'Memories at The Getaway'],
   ['assets/gallery/2.webp', 'At Static Age Loft'],
   // [thumb_or_image_src, caption, optional_video_src]
-  ['assets/gallery/3.jpg', 'Shell crowd moment', 'assets/video/shell.mov']
+  ['assets/video/shell-thumb.jpg', 'Shell crowd moment', 'assets/video/shell.mov']
 ];
 
 (function(){
