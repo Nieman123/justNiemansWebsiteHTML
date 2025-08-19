@@ -12,6 +12,9 @@
 .dock-social{display:flex; align-items:center; gap:10px}
 .dock-ic{width:22px; height:22px; display:block; object-fit:contain; filter:invert(1) brightness(100)}
 
+/* Hamburger toggle button */
+.dock-toggle{display:none;}
+
 /* Body padding so dock doesn't overlap content */
 body.has-dock{ padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 
@@ -172,9 +175,26 @@ body{
   .release-grid{grid-template-columns: 1fr}
   .link-btn{ padding:26px 20px; font-size:18px; border-radius:20px }
   .link-ic{ width:68px; height:68px; border-radius:10px }
-  .dock-inner{gap:8px; padding:8px 10px; border-radius:14px}
-  .dock-brand img{width:28px; height:28px}
-  .pill-link{padding:.44rem .72rem; font-size:.9rem}
-  .dock-ic{width:20px; height:20px}
-  body.has-dock{ padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+  .dock-toggle{
+    position:fixed; right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:10000;
+    width:46px; height:46px; border-radius:14px;
+    border:1px solid rgba(255,255,255,.12); background:rgba(19,19,24,.6);
+    backdrop-filter:blur(12px) saturate(120%); display:flex; align-items:center; justify-content:center;
+  }
+  .dock-toggle .bar{position:relative; width:22px; height:2px; background:#fff; border-radius:1px;}
+  .dock-toggle .bar::before,
+  .dock-toggle .bar::after{content:""; position:absolute; left:0; width:100%; height:2px; background:#fff; border-radius:1px; transition:transform .25s;}
+  .dock-toggle .bar::before{top:-6px;}
+  .dock-toggle .bar::after{top:6px;}
+  body.dock-open .dock-toggle .bar{background:transparent;}
+  body.dock-open .dock-toggle .bar::before{transform:translateY(6px) rotate(45deg);}
+  body.dock-open .dock-toggle .bar::after{transform:translateY(-6px) rotate(-45deg);}
+
+  .dock-nav{left:0; right:0; bottom:0; top:auto; transform:translateY(100%); transition:transform .3s ease; pointer-events:none;}
+  body.dock-open .dock-nav{transform:translateY(0); pointer-events:auto;}
+  .dock-inner{flex-direction:column; align-items:flex-start; gap:12px; padding:20px; border-radius:16px;}
+  .dock-links{flex-direction:column; align-items:flex-start; gap:12px; overflow:visible;}
+  .pill-link{padding:.6rem 1rem; font-size:1rem}
+  .dock-ic{width:22px; height:22px}
+  body.has-dock{padding-bottom:0}
 }

@@ -279,3 +279,20 @@ document.addEventListener('click', (e) => {
     }catch(e){ /* ignore malformed */ }
   });
 })();
+
+// Mobile dock toggle
+(function(){
+  const btn = document.getElementById('dockToggle');
+  const nav = document.getElementById('dockNav');
+  if(!btn || !nav) return;
+  btn.addEventListener('click', () => {
+    const open = document.body.classList.toggle('dock-open');
+    btn.setAttribute('aria-expanded', open);
+  });
+  nav.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      document.body.classList.remove('dock-open');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  });
+})();
