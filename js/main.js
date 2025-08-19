@@ -103,11 +103,20 @@ const GALLERY_ITEMS = [
   const cap   = document.getElementById('g-cap');
   const thumbsWrap = document.getElementById('gallery-thumbs');
   const galleryMain = document.querySelector('.gallery-main');
+  const unmuteBtn = document.getElementById('unmuteBtn');
 
   let i = 0;
   let active = mainA;
   let standby = mainB;
   let timer = null;
+
+  function showUnmuteBtn(show){ if(unmuteBtn) unmuteBtn.hidden = !show; }
+  function handleUnmute(){
+    const vid = galleryMain.querySelector('.slide-vid');
+    if(vid){ vid.muted = false; vid.play(); }
+    showUnmuteBtn(false);
+  }
+  if(unmuteBtn){ unmuteBtn.addEventListener('click', handleUnmute); }
 
   function removeExistingVideo(){
     const existingVideo = galleryMain.querySelector('.slide-vid');
@@ -115,6 +124,7 @@ const GALLERY_ITEMS = [
       existingVideo.pause();
       existingVideo.remove();
     }
+    showUnmuteBtn(false);
   }
 
   function buildThumbs(){
@@ -152,6 +162,7 @@ const GALLERY_ITEMS = [
           video.autoplay = true;
           video.setAttribute('aria-label', t.alt || 'Video');
           galleryMain.appendChild(video);
+          showUnmuteBtn(true);
           // Update active index and UI state
           i = idx;
           stopTimer();

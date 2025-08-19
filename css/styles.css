@@ -107,6 +107,9 @@ body{
 /* Caption overlay */
 .caption{ position:absolute; left:0; right:0; bottom:0; padding:10px 14px; font-size:.9rem; color:#eaeaf0; background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.78) 85%, rgba(0,0,0,.92) 100%); z-index:5; pointer-events:none; }
 
+/* Unmute button */
+.unmute-btn{position:absolute; bottom:0.5rem; right:0.5rem; padding:0.25rem 0.5rem; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:4px; cursor:pointer;}
+
 /* CONTENT */
 .content{padding:28px 0 80px}
 .section-title{font-weight:900; letter-spacing:2px; font-size:clamp(16px, 2.8vw, 22px); margin:34px 0 18px; text-transform:uppercase; color:#e9e9f2}
