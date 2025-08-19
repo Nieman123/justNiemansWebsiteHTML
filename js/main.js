@@ -89,8 +89,8 @@
 const GALLERY_ITEMS = [
   ['assets/gallery/1.jpg', 'Memories at The Getaway'],
   ['assets/gallery/2.jpg', 'Afters?'],
-  ['assets/gallery/3.jpg', 'Loading up a track that will be just right.'],
-  ['assets/gallery/7.jpg', 'Crowd at the show'],
+  ['assets/gallery/3.jpg', 'Looking for the next track.'],
+  ['assets/gallery/7.jpg', 'At Electric Forest 2025.'],
   ['assets/gallery/5.jpg', 'Memories at The Getaway'],
   ['assets/gallery/2.webp', 'At Static Age Loft'],
   // [thumb_or_image_src, caption, optional_video_src]
