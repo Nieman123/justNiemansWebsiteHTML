@@ -109,12 +109,14 @@ const GALLERY_ITEMS = [
   let active = mainA;
   let standby = mainB;
   let timer = null;
+  let resumeTimeout = null;
 
   function showUnmuteBtn(show){ if(unmuteBtn) unmuteBtn.hidden = !show; }
   function handleUnmute(){
     const vid = galleryMain.querySelector('.slide-vid');
     if(vid){ vid.muted = false; vid.play(); }
     showUnmuteBtn(false);
+    pauseThenResume();
   }
   if(unmuteBtn){ unmuteBtn.addEventListener('click', handleUnmute); }
 
@@ -144,35 +146,35 @@ const GALLERY_ITEMS = [
       t.setAttribute('loading', 'lazy');
       // Note: If thumbnail elements have data-video attributes, they should be set in HTML or elsewhere
       t.addEventListener('click', ()=>{
-        if(t.dataset.video){
-          removeExistingVideo();
-          // Demote the currently active image for a smooth transition
-          const activeEl = galleryMain.querySelector('.slide-img.is-active');
-          if(activeEl){
-            activeEl.classList.remove('is-active');
-            activeEl.classList.add('to-left');
-            setTimeout(()=>activeEl.classList.remove('to-left'), 500);
+          if(t.dataset.video){
+            removeExistingVideo();
+            // Demote the currently active image for a smooth transition
+            const activeEl = galleryMain.querySelector('.slide-img.is-active');
+            if(activeEl){
+              activeEl.classList.remove('is-active');
+              activeEl.classList.add('to-left');
+              setTimeout(()=>activeEl.classList.remove('to-left'), 500);
+            }
+            const video = document.createElement('video');
+            video.src = t.dataset.video;
+            video.className = 'slide-vid slide-media is-active';
+            video.muted = true;
+            video.loop = true;
+            video.playsInline = true;
+            video.autoplay = true;
+            video.setAttribute('aria-label', t.alt || 'Video');
+            galleryMain.appendChild(video);
+            showUnmuteBtn(true);
+            // Update active index and UI state
+            i = idx;
+            pauseThenResume();
+            setCaption(t.alt || '');
+            markActiveThumb();
+          } else {
+            removeExistingVideo();
+            goTo(idx);
+            pauseThenResume();
           }
-          const video = document.createElement('video');
-          video.src = t.dataset.video;
-          video.className = 'slide-vid slide-media is-active';
-          video.muted = true;
-          video.loop = true;
-          video.playsInline = true;
-          video.autoplay = true;
-          video.setAttribute('aria-label', t.alt || 'Video');
-          galleryMain.appendChild(video);
-          showUnmuteBtn(true);
-          // Update active index and UI state
-          i = idx;
-          stopTimer();
-          setCaption(t.alt || '');
-          markActiveThumb();
-        } else {
-          removeExistingVideo();
-          goTo(idx);
-          pauseThenResume();
-        }
       });
       thumbsWrap.appendChild(t);
     });
@@ -240,13 +242,16 @@ const GALLERY_ITEMS = [
     removeExistingVideo();
     goTo((i+1) % GALLERY_ITEMS.length); 
   }
-  function startTimer(){ 
-    if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){ 
-      timer = setInterval(next, 7000); 
-    } 
+  function startTimer(){
+    if(timer || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    timer = setInterval(next, 7000);
   }
   function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
-  function pauseThenResume(){ stopTimer(); setTimeout(startTimer, 12000); }
+  function pauseThenResume(){
+    stopTimer();
+    if(resumeTimeout){ clearTimeout(resumeTimeout); }
+    resumeTimeout = setTimeout(()=>{ resumeTimeout=null; startTimer(); }, 30000);
+  }
 
   // About toggle (starts collapsed; button stays visible)
   const about = document.querySelector('.about-hero');

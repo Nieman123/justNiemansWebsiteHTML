@@ -108,7 +108,8 @@ body{
 .caption{ position:absolute; left:0; right:0; bottom:0; padding:10px 14px; font-size:.9rem; color:#eaeaf0; background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.78) 85%, rgba(0,0,0,.92) 100%); z-index:5; pointer-events:none; }
 
 /* Unmute button */
-.unmute-btn{position:absolute; bottom:0.5rem; right:0.5rem; padding:0.25rem 0.5rem; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:4px; cursor:pointer;}
+.unmute-btn{position:absolute; bottom:0.5rem; right:0.5rem; width:2.5rem; height:2.5rem; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; cursor:pointer;}
+.unmute-btn .unmute-ic{width:1.5rem; height:1.5rem; fill:currentColor;}
 
 /* CONTENT */
 .content{padding:28px 0 80px}
