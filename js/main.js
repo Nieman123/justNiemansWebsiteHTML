@@ -103,7 +103,7 @@ const GALLERY_ITEMS = [
   const cap   = document.getElementById('g-cap');
   const thumbsWrap = document.getElementById('gallery-thumbs');
   const galleryMain = document.querySelector('.gallery-main');
-  const unmuteBtn = document.getElementById('unmuteBtn');
+  let unmuteBtn;
 
   let i = 0;
   let active = mainA;
@@ -111,11 +111,39 @@ const GALLERY_ITEMS = [
   let timer = null;
   let resumeTimeout = null;
 
-  function showUnmuteBtn(show, muted=true){
-    if(!unmuteBtn) return;
-    unmuteBtn.hidden = !show;
+  function showUnmuteBtn(show, muted = true){
+    if(!show){
+      if(unmuteBtn){
+        unmuteBtn.classList.add('is-muted');
+        unmuteBtn.setAttribute('aria-label', 'Unmute video');
+        unmuteBtn.remove();
+      }
+      return;
+    }
+    if(!unmuteBtn){
+      unmuteBtn = document.createElement('button');
+      unmuteBtn.id = 'unmuteBtn';
+      unmuteBtn.className = 'unmute-btn is-muted';
+      unmuteBtn.setAttribute('aria-label', 'Unmute video');
+      unmuteBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" class="ic-muted">
+          <path d="M3 9v6h4l5 5V4L7 9H3z"/>
+          <path d="M16.5 12a3.5 3.5 0 00-2-3.16v6.32a3.5 3.5 0 002-3.16z"/>
+          <path d="M14.5 3.5v2.1c3.53.73 6.5 3.87 6.5 7.9s-2.97 7.17-6.5 7.9v2.1c4.45-.82 8-4.79 8-10s-3.55-9.18-8-10z"/>
+          <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" />
+          <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" />
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" class="ic-unmuted">
+          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a3.5 3.5 0 00-2-3.16v6.32a3.5 3.5 0 002-3.16zM14.5 3.5v2.1c3.53.73 6.5 3.87 6.5 7.9s-2.97 7.17-6.5 7.9v2.1c4.45-.82 8-4.79 8-10s-3.55-9.18-8-10z"/>
+        </svg>
+      `;
+      unmuteBtn.addEventListener('click', toggleMute);
+    }
     unmuteBtn.classList.toggle('is-muted', muted);
     unmuteBtn.setAttribute('aria-label', muted ? 'Unmute video' : 'Mute video');
+    if(!unmuteBtn.isConnected){
+      galleryMain.appendChild(unmuteBtn);
+    }
   }
   function toggleMute(){
     const vid = galleryMain.querySelector('.slide-vid');
@@ -127,7 +155,6 @@ const GALLERY_ITEMS = [
     showUnmuteBtn(true, vid.muted);
     pauseThenResume();
   }
-  if(unmuteBtn){ unmuteBtn.addEventListener('click', toggleMute); }
 
   function removeExistingVideo(){
     const existingVideo = galleryMain.querySelector('.slide-vid');
