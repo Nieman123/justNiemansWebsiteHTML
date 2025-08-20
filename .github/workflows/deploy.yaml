@@ -1,0 +1,54 @@
+name: Build images & deploy to Firebase Hosting
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build responsive images
+        run: npm run img:build
+
+      # If you have a site build step, do it here (replace the echo):
+      - name: Build site
+        run: echo "No build step configured"
+
+      # Preview deploy on PRs
+      - name: Deploy Preview (PRs)
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JUSTNIEMANSWEBSITE }}
+          projectId: justniemanswebsite
+          channelId: pr-${{ github.event.number }}
+
+      # Live deploy on pushes to main
+      - name: Deploy Live (main)
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JUSTNIEMANSWEBSITE }}
+          projectId: justniemanswebsite
+          channelId: live
