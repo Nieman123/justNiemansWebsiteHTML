@@ -121,7 +121,9 @@ const GALLERY_ITEMS = [
     const vid = galleryMain.querySelector('.slide-vid');
     if(!vid) return;
     vid.muted = !vid.muted;
-    if(!vid.muted){ vid.play(); }
+    if(!vid.muted){
+      setTimeout(()=>{ vid.play().catch(()=>{}); }, 0);
+    }
     showUnmuteBtn(true, vid.muted);
     pauseThenResume();
   }
