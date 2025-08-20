@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "fast-glob": "^3.3.3",
+    "picocolors": "^1.1.1",
+    "sharp": "^0.34.3"
+  },
+  "scripts": {
+    "img:build": "node tools/build-images.mjs"
+  }
+}
