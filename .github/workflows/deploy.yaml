@@ -3,7 +3,6 @@ name: Build images & deploy to Firebase Hosting
 on:
   push:
     branches: [ main ]
-  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -33,15 +32,6 @@ jobs:
       - name: Build site
         run: echo "No build step configured"
 
-      # Preview deploy on PRs
-      - name: Deploy Preview (PRs)
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JUSTNIEMANSWEBSITE }}
-          projectId: justniemanswebsite
-          channelId: pr-${{ github.event.number }}
 
       # Live deploy on pushes to main
       - name: Deploy Live (main)
@@ -51,4 +41,3 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JUSTNIEMANSWEBSITE }}
           projectId: justniemanswebsite
-          channelId: live
