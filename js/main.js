@@ -111,14 +111,21 @@ const GALLERY_ITEMS = [
   let timer = null;
   let resumeTimeout = null;
 
-  function showUnmuteBtn(show){ if(unmuteBtn) unmuteBtn.hidden = !show; }
-  function handleUnmute(){
+  function showUnmuteBtn(show, muted=true){
+    if(!unmuteBtn) return;
+    unmuteBtn.hidden = !show;
+    unmuteBtn.classList.toggle('is-muted', muted);
+    unmuteBtn.setAttribute('aria-label', muted ? 'Unmute video' : 'Mute video');
+  }
+  function toggleMute(){
     const vid = galleryMain.querySelector('.slide-vid');
-    if(vid){ vid.muted = false; vid.play(); }
-    showUnmuteBtn(false);
+    if(!vid) return;
+    vid.muted = !vid.muted;
+    if(!vid.muted){ vid.play(); }
+    showUnmuteBtn(true, vid.muted);
     pauseThenResume();
   }
-  if(unmuteBtn){ unmuteBtn.addEventListener('click', handleUnmute); }
+  if(unmuteBtn){ unmuteBtn.addEventListener('click', toggleMute); }
 
   function removeExistingVideo(){
     const existingVideo = galleryMain.querySelector('.slide-vid');
@@ -126,7 +133,7 @@ const GALLERY_ITEMS = [
       existingVideo.pause();
       existingVideo.remove();
     }
-    showUnmuteBtn(false);
+    showUnmuteBtn(false, true);
   }
 
   function buildThumbs(){
@@ -164,7 +171,7 @@ const GALLERY_ITEMS = [
             video.autoplay = true;
             video.setAttribute('aria-label', t.alt || 'Video');
             galleryMain.appendChild(video);
-            showUnmuteBtn(true);
+            showUnmuteBtn(true, true);
             // Update active index and UI state
             i = idx;
             pauseThenResume();
@@ -230,7 +237,7 @@ const GALLERY_ITEMS = [
     setCaption(i);
     buildThumbs();
     markActiveThumb();
-    showUnmuteBtn(false);
+    showUnmuteBtn(false, true);
   }
 
   function goTo(idx){
@@ -238,7 +245,7 @@ const GALLERY_ITEMS = [
     slideSwap(idx);
     i = idx;
     markActiveThumb();
-    showUnmuteBtn(false);
+    showUnmuteBtn(false, true);
   }
   function next(){ 
     removeExistingVideo();

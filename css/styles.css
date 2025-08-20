@@ -109,7 +109,10 @@ body{
 
 /* Unmute button */
 .unmute-btn{position:absolute; bottom:0.5rem; right:0.5rem; width:2.5rem; height:2.5rem; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; cursor:pointer; z-index:6;}
-.unmute-btn .unmute-ic{width:1.5rem; height:1.5rem; fill:currentColor;}
+.unmute-btn svg{width:1.5rem; height:1.5rem; fill:currentColor;}
+.unmute-btn .ic-unmuted{display:none;}
+.unmute-btn:not(.is-muted) .ic-unmuted{display:block;}
+.unmute-btn:not(.is-muted) .ic-muted{display:none;}
 
 /* CONTENT */
 .content{padding:28px 0 80px}
