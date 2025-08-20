@@ -24,7 +24,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <link
       rel="icon"
-      href="assets/just-nieman-logo-inverted.png"
+      href="optimized/just-nieman-logo-inverted-optimized.png"
       type="image/png"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -43,9 +43,17 @@
     <link
       rel="preload"
       as="image"
-      href="assets/just-nieman-logo-wide-inverted.png"
+      href="optimized/just-nieman-logo-wide-inverted-1024.avif"
+      imagesrcset="optimized/just-nieman-logo-wide-inverted-512.avif 512w, optimized/just-nieman-logo-wide-inverted-1024.avif 1024w, optimized/just-nieman-logo-wide-inverted-1375.avif 1375w"
+      imagesizes="(max-width: 768px) 90vw, 560px"
     />
-    <link rel="preload" as="image" href="assets/gallery/1.webp" />
+    <link
+      rel="preload"
+      as="image"
+      href="optimized/gallery-1-640.avif"
+      imagesrcset="optimized/gallery-1-320.avif 320w, optimized/gallery-1-640.avif 640w"
+      imagesizes="(max-width: 600px) 320px, 360px"
+    />
     <!-- Google tag (gtag.js) -->
     <script
       async
@@ -78,15 +86,27 @@
     <div class="site-bg"></div>
     <header class="container hero" role="banner">
       <div class="hero-left">
-        <img
-          class="logo-wordmark"
-          src="assets/just-nieman-logo-wide-inverted.png"
-          alt="Just Nieman"
-          width="300"
-          height="60"
-          fetchpriority="high"
-          decoding="async"
-        />
+        <picture>
+          <source
+            type="image/avif"
+            srcset="optimized/just-nieman-logo-wide-inverted-512.avif 512w, optimized/just-nieman-logo-wide-inverted-1024.avif 1024w, optimized/just-nieman-logo-wide-inverted-1375.avif 1375w"
+            sizes="(max-width: 768px) 90vw, 560px"
+          />
+          <source
+            type="image/webp"
+            srcset="optimized/just-nieman-logo-wide-inverted-512.webp 512w, optimized/just-nieman-logo-wide-inverted-1024.webp 1024w, optimized/just-nieman-logo-wide-inverted-1375.webp 1375w"
+            sizes="(max-width: 768px) 90vw, 560px"
+          />
+          <img
+            class="logo-wordmark"
+            src="assets/just-nieman-logo-wide-inverted.png"
+            alt="Just Nieman"
+            width="1375"
+            height="649"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </picture>
         <p class="tag">Multi-genre EDM producer and DJ</p>
 
         <!-- Bio lives in hero -->
@@ -137,16 +157,23 @@
       <!-- Gallery: 9:16 main + thumbs under -->
       <aside class="hero-gallery" aria-label="Photo gallery">
         <figure class="gallery-main">
-          <img
-            id="g-main-a"
-            class="slide-img slide-media is-active"
-            src="assets/gallery/1.webp"
-            alt="Memories at The Getaway"
-            width="360"
-            height="640"
-            fetchpriority="high"
-            decoding="async"
-          />
+          <picture>
+            <source
+              type="image/avif"
+              srcset="optimized/gallery-1-320.avif 320w, optimized/gallery-1-640.avif 640w"
+              sizes="(max-width: 600px) 320px, 360px"
+            />
+            <img
+              id="g-main-a"
+              class="slide-img slide-media is-active"
+              src="assets/gallery/1.webp"
+              alt="Memories at The Getaway"
+              width="360"
+              height="640"
+              fetchpriority="high"
+              decoding="async"
+            />
+          </picture>
           <img
             id="g-main-b"
             class="slide-img slide-media"
@@ -161,51 +188,71 @@
         </figure>
         <!-- Fallback thumbs (JS will rebuild these dynamically) -->
         <div class="gallery-thumbs" id="gallery-thumbs" role="list">
-          <img
-            class="thumb"
-            src="assets/gallery/2.webp"
-            alt="Afters?"
-            role="listitem"
-            loading="lazy" decoding="async"
-            width="68"
-            height="120"
-          />
-          <img
-            class="thumb"
-            src="assets/gallery/3.webp"
-            alt="Looking for the next track."
-            role="listitem"
-            loading="lazy" decoding="async"
-            width="68"
-            height="120"
-          />
-          <img
-            class="thumb"
-            src="assets/gallery/7.webp"
-            alt="At Electric Forest 2025."
-            role="listitem"
-            loading="lazy" decoding="async"
-            width="68"
-            height="120"
-          />
-          <img
-            class="thumb"
-            src="assets/gallery/5.webp"
-            alt="Memories at The Getaway."
-            role="listitem"
-            loading="lazy" decoding="async"
-            width="68"
-            height="120"
-          />
-          <img
-            class="thumb"
-            src="assets/gallery/6.webp"
-            alt="The Pluto Crew and I."
-            role="listitem"
-            loading="lazy" decoding="async"
-            width="68"
-            height="120"
-          />
+          <picture>
+            <source type="image/avif" srcset="optimized/gallery-2-120.avif" />
+            <img
+              class="thumb"
+              src="assets/gallery/2.webp"
+              alt="Afters?"
+              role="listitem"
+              loading="lazy"
+              decoding="async"
+              width="68"
+              height="120"
+            />
+          </picture>
+          <picture>
+            <source type="image/avif" srcset="optimized/gallery-3-120.avif" />
+            <img
+              class="thumb"
+              src="assets/gallery/3.webp"
+              alt="Looking for the next track."
+              role="listitem"
+              loading="lazy"
+              decoding="async"
+              width="68"
+              height="120"
+            />
+          </picture>
+          <picture>
+            <source type="image/avif" srcset="optimized/gallery-7-120.avif" />
+            <img
+              class="thumb"
+              src="assets/gallery/7.webp"
+              alt="At Electric Forest 2025."
+              role="listitem"
+              loading="lazy"
+              decoding="async"
+              width="68"
+              height="120"
+            />
+          </picture>
+          <picture>
+            <source type="image/avif" srcset="optimized/gallery-5-120.avif" />
+            <img
+              class="thumb"
+              src="assets/gallery/5.webp"
+              alt="Memories at The Getaway."
+              role="listitem"
+              loading="lazy"
+              decoding="async"
+              width="68"
+              height="120"
+            />
+          </picture>
+          <picture>
+            <source type="image/avif" srcset="optimized/gallery-6-120.avif" />
+            <img
+              class="thumb"
+              src="assets/gallery/6.webp"
+              alt="The Pluto Crew and I."
+              role="listitem"
+              loading="lazy"
+              decoding="async"
+              width="68"
+              height="120"
+            />
+          </picture>
         </div>
       </aside>
     </header>
@@ -220,14 +267,22 @@
         <div class="release-grid">
           <article class="card">
             <header class="card-header">“IT'S NOT THAT DEEP”</header>
-            <img
-              class="card-art"
-              src="assets/its-not-that-deep.webp"
-              alt="Cover art for It's Not That Deep"
-              loading="lazy" decoding="async"
-              width="300"
-              height="300"
-            />
+            <picture>
+              <source
+                type="image/avif"
+                srcset="optimized/its-not-that-deep-150.avif 150w, optimized/its-not-that-deep-300.avif 300w"
+                sizes="(max-width: 480px) 150px, 300px"
+              />
+              <img
+                class="card-art"
+                src="assets/its-not-that-deep.webp"
+                alt="Cover art for It's Not That Deep"
+                loading="lazy"
+                decoding="async"
+                width="300"
+                height="300"
+              />
+            </picture>
             <a
               class="btn ghost"
               href="https://distrokid.com/hyperfollow/justnieman/its-not-that-deep"
@@ -238,14 +293,22 @@
           </article>
           <article class="card">
             <header class="card-header">“MY MUSIC”</header>
-            <img
-              class="card-art"
-              src="assets/my-music.webp"
-              alt="Cover art for My Music"
-              loading="lazy" decoding="async"
-              width="300"
-              height="300"
-            />
+            <picture>
+              <source
+                type="image/avif"
+                srcset="optimized/my-music-150.avif 150w, optimized/my-music-300.avif 300w"
+                sizes="(max-width: 480px) 150px, 300px"
+              />
+              <img
+                class="card-art"
+                src="assets/my-music.webp"
+                alt="Cover art for My Music"
+                loading="lazy"
+                decoding="async"
+                width="300"
+                height="300"
+              />
+            </picture>
             <a
               class="btn ghost"
               href="https://distrokid.com/hyperfollow/justnieman/my-music"
@@ -256,14 +319,22 @@
           </article>
           <article class="card">
             <header class="card-header">“LIVES”</header>
-            <img
-              class="card-art"
-              src="assets/lives.webp"
-              alt="Cover art for Lives"
-              loading="lazy" decoding="async"
-              width="300"
-              height="300"
-            />
+            <picture>
+              <source
+                type="image/avif"
+                srcset="optimized/lives-150.avif 150w, optimized/lives-300.avif 300w"
+                sizes="(max-width: 480px) 150px, 300px"
+              />
+              <img
+                class="card-art"
+                src="assets/lives.webp"
+                alt="Cover art for Lives"
+                loading="lazy"
+                decoding="async"
+                width="300"
+                height="300"
+              />
+            </picture>
             <a
               class="btn ghost"
               href="https://distrokid.com/hyperfollow/justnieman/lives"
@@ -274,14 +345,22 @@
           </article>
           <article class="card">
             <header class="card-header">“PERSONAL”</header>
-            <img
-              class="card-art"
-              src="assets/personal.webp"
-              alt="Cover art for Personal"
-              loading="lazy" decoding="async"
-              width="300"
-              height="300"
-            />
+            <picture>
+              <source
+                type="image/avif"
+                srcset="optimized/personal-150.avif 150w, optimized/personal-300.avif 300w"
+                sizes="(max-width: 480px) 150px, 300px"
+              />
+              <img
+                class="card-art"
+                src="assets/personal.webp"
+                alt="Cover art for Personal"
+                loading="lazy"
+                decoding="async"
+                width="300"
+                height="300"
+              />
+            </picture>
             <a
               class="btn ghost"
               href="https://distrokid.com/hyperfollow/justnieman/personal"
@@ -298,9 +377,10 @@
           <div class="contact-left">
             <img
               class="jn-mark"
-              src="assets/just-nieman-logo-inverted.png"
+              src="optimized/just-nieman-logo-inverted-optimized.png"
               alt="JN mark"
-              loading="lazy" decoding="async"
+              loading="lazy"
+              decoding="async"
               width="100"
               height="100"
             />
@@ -321,15 +401,18 @@
                 class="btn solid with-icon"
                 href="mailto:contact@niemans.website"
               >
-                <img
-                  src="assets/home/constant/email.png"
-                  alt=""
-                  aria-hidden="true"
-                  class="btn-ic"
-                  loading="lazy" decoding="async"
-                  width="24"
-                  height="24"
-                />
+                <picture>
+                  <source type="image/webp" srcset="optimized/email-48.webp" />
+                  <img
+                    src="assets/home/constant/email.png"
+                    alt="Email"
+                    class="btn-ic"
+                    loading="lazy"
+                    decoding="async"
+                    width="24"
+                    height="24"
+                  />
+                </picture>
                 <span>Email Me</span>
               </a>
               <a
@@ -338,15 +421,18 @@
                 target="_blank"
                 rel="noopener"
               >
-                <img
-                  src="assets/Instagram.webp"
-                  alt=""
-                  aria-hidden="true"
-                  class="btn-ic"
-                  loading="lazy" decoding="async"
-                  width="24"
-                  height="24"
-                />
+                <picture>
+                  <source type="image/avif" srcset="optimized/instagram-64.avif" />
+                  <img
+                    src="assets/Instagram.webp"
+                    alt="Instagram"
+                    class="btn-ic"
+                    loading="lazy"
+                    decoding="async"
+                    width="24"
+                    height="24"
+                  />
+                </picture>
                 <span>@justnieman on Insta</span>
               </a>
               <a
@@ -355,15 +441,18 @@
                 target="_blank"
                 rel="noopener"
               >
-                <img
-                  src="assets/soundcloud-logo.png"
-                  alt=""
-                  aria-hidden="true"
-                  class="btn-ic"
-                  loading="lazy" decoding="async"
-                  width="24"
-                  height="24"
-                />
+                <picture>
+                  <source type="image/webp" srcset="optimized/soundcloud-logo-64.webp" />
+                  <img
+                    src="assets/soundcloud-logo.png"
+                    alt="SoundCloud"
+                    class="btn-ic"
+                    loading="lazy"
+                    decoding="async"
+                    width="24"
+                    height="24"
+                  />
+                </picture>
                 <span>SoundCloud</span>
               </a>
             </div>
@@ -384,7 +473,7 @@
     <nav id="dockNav" class="dock-nav" aria-label="Site navigation">
       <div class="dock-inner">
         <a class="dock-brand" href="/">
-          <img src="assets/just-nieman-logo-inverted.png" alt="JN" width="32" height="32" decoding="async" />
+          <img src="optimized/just-nieman-logo-inverted-optimized.png" alt="JN" width="32" height="32" decoding="async" />
         </a>
         <div class="dock-links" role="menubar">
           <a class="pill-link" href="#releases" role="menuitem">Releases</a>
@@ -405,16 +494,18 @@
             rel="noopener"
             aria-label="Instagram"
           >
-            <img
-              class="dock-ic"
-              src="assets/Instagram.webp"
-              alt=""
-              aria-hidden="true"
-              width="22"
-              height="22"
-              loading="lazy"
-              decoding="async"
-            />
+            <picture>
+              <source type="image/avif" srcset="optimized/instagram-64.avif" />
+              <img
+                class="dock-ic"
+                src="assets/Instagram.webp"
+                alt="Instagram"
+                width="22"
+                height="22"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
           </a>
           <a
             href="https://soundcloud.com/just-nieman"
@@ -422,16 +513,18 @@
             rel="noopener"
             aria-label="SoundCloud"
           >
-            <img
-              class="dock-ic"
-              src="assets/soundcloud-logo.png"
-              alt=""
-              aria-hidden="true"
-              width="22"
-              height="22"
-              loading="lazy"
-              decoding="async"
-            />
+            <picture>
+              <source type="image/webp" srcset="optimized/soundcloud-logo-64.webp" />
+              <img
+                class="dock-ic"
+                src="assets/soundcloud-logo.png"
+                alt="SoundCloud"
+                width="22"
+                height="22"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
           </a>
         </div>
       </div>

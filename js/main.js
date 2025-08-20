@@ -114,7 +114,7 @@ const GALLERY_ITEMS = [
   ["assets/gallery/6.webp", "The Pluto Crew and I"],
   // [thumb_or_image_src, caption, optional_video_src]
   [
-    "assets/video/shell-thumb.jpg",
+    "optimized/shell-thumb-720.webp",
     "Shell crowd moment",
     "assets/video/shell.mp4",
   ],
@@ -190,22 +190,30 @@ const GALLERY_ITEMS = [
     if (!thumbsWrap) return;
     thumbsWrap.innerHTML = "";
     GALLERY_ITEMS.forEach((item, idx) => {
-      const t = new Image();
-      t.src = item[0];
-      t.alt = item[1];
-      t.className = "thumb" + (idx === i ? " active" : "");
-      // If this gallery item specifies a video, tag the thumb
-      if (Array.isArray(item) && item[2]) {
-        t.dataset.video = item[2];
-        t.classList.add("video-thumb");
+      const pic = document.createElement("picture");
+      const match = item[0].match(/assets\/gallery\/(\d)\.webp$/);
+      if (match && match[1] !== "1") {
+        const source = document.createElement("source");
+        source.type = "image/avif";
+        source.srcset = `optimized/gallery-${match[1]}-120.avif`;
+        pic.appendChild(source);
       }
-      t.setAttribute("role", "listitem");
-      t.setAttribute("loading", "lazy");
-      // Note: If thumbnail elements have data-video attributes, they should be set in HTML or elsewhere
-      t.addEventListener("click", () => {
-        if (t.dataset.video) {
+      const img = new Image();
+      img.src = item[0];
+      img.alt = item[1];
+      img.className = "thumb" + (idx === i ? " active" : "");
+      img.setAttribute("role", "listitem");
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.width = 68;
+      img.height = 120;
+      if (Array.isArray(item) && item[2] && !match) {
+        img.dataset.video = item[2];
+        img.classList.add("video-thumb");
+      }
+      img.addEventListener("click", () => {
+        if (img.dataset.video) {
           removeExistingVideo();
-          // Demote the currently active image for a smooth transition
           const activeEl = galleryMain.querySelector(".slide-img.is-active");
           if (activeEl) {
             activeEl.classList.remove("is-active");
@@ -213,19 +221,30 @@ const GALLERY_ITEMS = [
             setTimeout(() => activeEl.classList.remove("to-left"), 500);
           }
           const video = document.createElement("video");
-          video.src = t.dataset.video;
           video.className = "slide-vid slide-media is-active";
           video.muted = true;
           video.loop = true;
           video.playsInline = true;
           video.autoplay = true;
-          video.setAttribute("aria-label", t.alt || "Video");
+          video.poster = "optimized/shell-thumb-720.webp";
+          video.setAttribute("aria-label", img.alt || "Video");
+          const s1 = document.createElement("source");
+          s1.src = "optimized/video/shell-av1.webm";
+          s1.type = "video/webm";
+          video.appendChild(s1);
+          const s2 = document.createElement("source");
+          s2.src = "optimized/video/shell-vp9.webm";
+          s2.type = "video/webm";
+          video.appendChild(s2);
+          const s3 = document.createElement("source");
+          s3.src = img.dataset.video;
+          s3.type = "video/mp4";
+          video.appendChild(s3);
           galleryMain.appendChild(video);
           showUnmuteBtn(true, true);
-          // Update active index and UI state
           i = idx;
           pauseThenResume();
-          setCaption(t.alt || "");
+          setCaption(img.alt || "");
           markActiveThumb();
         } else {
           removeExistingVideo();
@@ -233,7 +252,8 @@ const GALLERY_ITEMS = [
           pauseThenResume();
         }
       });
-      thumbsWrap.appendChild(t);
+      pic.appendChild(img);
+      thumbsWrap.appendChild(pic);
     });
   }
 
@@ -274,7 +294,7 @@ const GALLERY_ITEMS = [
 
   function markActiveThumb() {
     if (!thumbsWrap) return;
-    Array.from(thumbsWrap.children).forEach((el, idx) => {
+    thumbsWrap.querySelectorAll(".thumb").forEach((el, idx) => {
       el.classList.toggle("active", idx === i);
     });
   }

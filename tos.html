@@ -18,7 +18,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <link
       rel="icon"
-      href="assets/just-nieman-logo-inverted.png"
+      href="optimized/just-nieman-logo-inverted-optimized.png"
       type="image/png"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -157,7 +157,7 @@
     <nav class="dock-nav" aria-label="Site navigation">
       <div class="dock-inner">
         <a class="dock-brand" href="/">
-          <img src="assets/just-nieman-logo-inverted.png" alt="JN" width="32" height="32" decoding="async" />
+          <img src="optimized/just-nieman-logo-inverted-optimized.png" alt="JN" width="32" height="32" decoding="async" />
         </a>
         <div class="dock-links" role="menubar">
           <a class="pill-link" href="/index.html#releases" role="menuitem"
@@ -175,16 +175,18 @@
             rel="noopener"
             aria-label="Instagram"
           >
-            <img
-              class="dock-ic"
-              src="assets/Instagram.webp"
-              alt=""
-              aria-hidden="true"
-              width="22"
-              height="22"
-              loading="lazy"
-              decoding="async"
-            />
+            <picture>
+              <source type="image/avif" srcset="optimized/instagram-64.avif" />
+              <img
+                class="dock-ic"
+                src="assets/Instagram.webp"
+                alt="Instagram"
+                width="22"
+                height="22"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
           </a>
           <a
             href="https://soundcloud.com/just-nieman"
@@ -192,16 +194,18 @@
             rel="noopener"
             aria-label="SoundCloud"
           >
-            <img
-              class="dock-ic"
-              src="assets/soundcloud-logo.png"
-              alt=""
-              aria-hidden="true"
-              width="22"
-              height="22"
-              loading="lazy"
-              decoding="async"
-            />
+            <picture>
+              <source type="image/webp" srcset="optimized/soundcloud-logo-64.webp" />
+              <img
+                class="dock-ic"
+                src="assets/soundcloud-logo.png"
+                alt="SoundCloud"
+                width="22"
+                height="22"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
           </a>
         </div>
       </div>
