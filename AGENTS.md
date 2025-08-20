@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project overview
-Static website for an EDM artist. Pure HTML, CSS, and vanilla JS. No build system. Single entry page (`index.html`) with a featured gallery and light interactive behavior in `js/main.js`.
+Static website for an EDM artist. Primarily HTML, CSS, and vanilla JS. A minimal Node-based image optimization step (sharp) exists; no bundlers or frameworks. Single entry page (`index.html`) with a featured gallery and light interactive behavior in `js/main.js`.
 
 ## Project structure
 ```
@@ -11,14 +11,20 @@ Static website for an EDM artist. Pure HTML, CSS, and vanilla JS. No build syste
 │  └─ styles.css
 ├─ js/
 │  └─ main.js
-└─ assets/
-   ├─ gallery/      # images shown in the homepage gallery
-   ├─ video/        # site videos (e.g., shell.mp4) and generated thumbnails
-   ├─ *.png|*.webp  # logos, icons
-   └─ ...           # misc site assets
+├─ assets/
+│  ├─ gallery/      # images shown in the homepage gallery
+│  ├─ video/        # site videos (e.g., shell.mp4) and generated thumbnails
+│  ├─ *.png|*.webp  # logos, icons
+│  └─ ...           # misc site assets
+├─ optimized/       # generated responsive assets (avif/webp/jpg)
+├─ tools/           # build scripts (e.g., build-images.mjs)
+├─ .github/workflows/deploy.yaml  # CI workflow
+├─ firebase.json    # Hosting config
+└─ package.json     # scripts: img:build
 ```
 Authoritative locations:
-- All static assets live under `/assets/`.
+- Originals live under `/assets/`.
+- Optimized, responsive outputs are written to `/optimized/` by the image build script.
 - Gallery items and captions are defined in `js/main.js` via `GALLERY_ITEMS` (see “Gallery editing recipe”).
 
 ## How to run locally
@@ -29,10 +35,10 @@ npx live-server .
 # or
 python -m http.server 8080
 ```
-There is no build step.
+App has no JS bundling step. If optimized images are missing, run `npm run img:build` to generate `/optimized` assets.
 
 ## Deploy
-Manual deploy only. Commit and push, then deploy to Firebase Hosting from the developer’s Mac as needed. There are no CI/CD hooks or build pipelines.
+Deployment is automated via GitHub Actions integrated with Firebase Hosting. When changes are pushed to the main branch, the workflow runs a Node.js script using sharp to generate optimized image assets automatically before deploying the site to Firebase Hosting.
 
 ## Code style and conventions
 - **HTML:** semantic where possible; keep ARIA attributes where present.
@@ -76,6 +82,7 @@ Target modern evergreen browsers. No workarounds for legacy Safari.
   - Thumbnails switch the main media.
   - Video thumb plays muted by default; Unmute control toggles audio and remains keyboard accessible.
   - Dock menu opens/closes on small screens and restores state on link click.
+- If images referenced under `/optimized/` 404 locally, run `npm run img:build` once.
 
 ## Git workflow
 - No branch rules. Keep commits focused. If changing UI behavior, include a brief summary in the commit message.
@@ -96,13 +103,14 @@ To add or change items shown in the hero gallery:
 4. Keep captions short and meaningful; they’re used for accessibility and the visible figure caption.
 
 ## Don’ts (for agents)
-- Don’t introduce build tools, package managers, or frameworks.
+- Don’t introduce new build tools or frameworks. Keep the existing minimal Node image pipeline (sharp) but don’t add bundlers or extra deps.
 - Don’t split scripts into modules or add TypeScript.
 - Don’t change directory structure or move assets outside `/assets/`.
 - Don’t remove ARIA attributes, captions, or keyboard behaviors.
 - Don’t add external analytics or scripts beyond those already present.
 
 ## Useful context for agentic tools
-- This repository intentionally omits `package.json`, tests, linters, and CI. Treat the project as a static site with manual deploys.
+- This repository primarily serves a static HTML/CSS/JS site, but now includes a minimal Node-based build step for image optimization using sharp.
+- Continuous integration and deployment are handled through GitHub Actions, which runs the build and deploy workflow automatically.
 - If you need to serve locally, use a minimal static server as noted above.
 - Prefer human-readable diffs over clever refactors.
