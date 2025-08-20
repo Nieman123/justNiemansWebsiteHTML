@@ -21,7 +21,7 @@
       c.style.height = "100%";
     }
     resize();
-    window.addEventListener("resize", resize);
+    window.addEventListener("resize", resize, { passive: true });
 
     const RAND = (min, max) => min + Math.random() * (max - min);
     const TAU = Math.PI * 2;
@@ -37,10 +37,14 @@
 
     let mouseX = 0.5,
       mouseY = 0.5;
-    window.addEventListener("mousemove", (e) => {
-      mouseX = e.clientX / window.innerWidth;
-      mouseY = e.clientY / window.innerHeight;
-    });
+    window.addEventListener(
+      "mousemove",
+      (e) => {
+        mouseX = e.clientX / window.innerWidth;
+        mouseY = e.clientY / window.innerHeight;
+      },
+      { passive: true }
+    );
 
     function ease(a, b, t) {
       return a + (b - a) * t;

@@ -6,11 +6,16 @@
     <title>JUST NIEMAN — Links</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://www.googletagmanager.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/styles.css" />
+    <style>
+
+:root{--bg-1:#0a0711;--bg-2:#20102e;--bg-3:#1a1a21;--card:#131318;--text:#ededf1;--muted:#b9b9c4;--accent-1:#a855f7;--accent-2:#06b6d4;--shadow:0 15px 40px rgba(0, 0, 0, 0.35);--radius-lg:22px;--radius-md:16px;--radius-sm:12px}*{box-sizing:border-box}html{scroll-behavior:smooth}body,html{height:100%}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:radial-gradient(1200px 600px at 10% -10%,#3b1357 0,rgba(59,19,87,0) 60%),linear-gradient(180deg,var(--bg-2),var(--bg-1) 35%,var(--bg-3))}.site-bg{position:fixed;inset:0;pointer-events:none;z-index:-1}#bg-canvas{position:fixed;inset:0;width:100%;height:100%;display:block;filter:blur(54px) saturate(120%);opacity:.75;z-index:-1}@media (prefers-reduced-motion:reduce){#bg-canvas{display:none}}.container{width:min(1200px,92%);margin-inline:auto}.hero{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:center;padding:44px 0 24px}.logo-wordmark{width:min(560px,90%);height:auto;display:block;margin:0;filter:drop-shadow(0 10px 28px rgba(0, 0, 0, .35))}.tag{margin:.5rem 0 0;font-weight:600;letter-spacing:.3px;color:#ddd;opacity:.9}.about-hero{margin-top:14px;background:rgba(14,14,18,.55);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-lg);box-shadow:var(--shadow)}.about-hero .about-content{padding:18px 18px 0;max-height:190px;overflow:hidden}.about-hero.expanded .about-content{max-height:none}.about-hero .about-actions{padding:12px 18px 18px;display:flex;justify-content:center}.hero-gallery{display:grid;grid-template-rows:auto auto;gap:14px;align-self:start;justify-self:end;width:min(960px,100%)}.gallery-main{position:relative;overflow:hidden;border-radius:var(--radius-lg);box-shadow:var(--shadow);aspect-ratio:9/16;width:100%;max-height:78vh;background:0 0;margin:0}.slide-media{width:100%;height:100%;object-fit:cover;object-position:center;background:0 0;border-radius:inherit}.slide-img,.slide-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:inherit;opacity:0;transform:translateX(10%);transition:transform .45s cubic-bezier(.22, .61, .36, 1),opacity .45s cubic-bezier(.22, .61, .36, 1);background:0 0}.slide-img.is-active,.slide-vid.is-active{opacity:1;transform:translateX(0);z-index:1}.slide-img.to-left,.slide-vid.to-left{opacity:0;transform:translateX(-10%)}.gallery-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px;justify-items:center}.thumb{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;box-shadow:var(--shadow);cursor:pointer;opacity:.9;transition:transform .18s ease,opacity .18s ease,box-shadow .18s ease;position:relative}.thumb:hover{transform:translateY(-2px);opacity:1}.thumb.active{outline:2px solid rgba(255,255,255,.7);opacity:1;box-shadow:0 8px 24px rgba(0,0,0,.35)}.thumb.video-thumb::after{content:"▶";position:absolute;bottom:4px;right:6px;font-size:14px;color:#fff;text-shadow:0 0 4px rgba(0,0,0,.6)}.caption{position:absolute;left:0;right:0;bottom:0;padding:10px 14px;font-size:.9rem;color:#eaeaf0;background:linear-gradient(180deg,rgba(0,0,0,0) 0,rgba(0,0,0,.78) 85%,rgba(0,0,0,.92) 100%);z-index:5;pointer-events:none}.unmute-btn{position:absolute;bottom:.5rem;right:.5rem;width:2.5rem;height:2.5rem;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;cursor:pointer;z-index:6}.btn{--p:var(--accent-1);--q:var(--accent-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:.6rem;border:none;text-decoration:none;font-weight:800;letter-spacing:.6px;text-transform:uppercase}.btn.pill{--p:#a855f7;--q:#a855f7;padding:.6rem 1.2rem;border-radius:999px;background:linear-gradient(135deg,var(--p),var(--q));color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.35)}.btn.ghost{margin-top:12px;padding:.65rem 1.1rem}    </style>
+    <link rel="stylesheet" href="css/styles.css" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="css/styles.css" /></noscript>
     <!-- Google tag (gtag.js) -->
     <script
       async
@@ -35,7 +40,7 @@
     <div class="site-bg"></div>
     <main class="links" role="main">
       <a href="/" class="avatar-link">
-        <img class="avatar" src="assets/gallery/3.webp" alt="Just Nieman" />
+        <img class="avatar" src="assets/gallery/3.webp" alt="Just Nieman" width="88" height="88" decoding="async" />
       </a>
       <h1 class="links-title">JUST NIEMAN</h1>
       <p class="links-sub">MUSICIAN | PRODUCER | DJ</p>
@@ -52,6 +57,10 @@
             alt=""
             class="link-ic"
             aria-hidden="true"
+            width="76"
+            height="76"
+            loading="lazy"
+            decoding="async"
           />
           <span>SoundCloud</span>
         </a>
@@ -66,6 +75,10 @@
             alt=""
             class="link-ic"
             aria-hidden="true"
+            width="76"
+            height="76"
+            loading="lazy"
+            decoding="async"
           />
           <span>Follow me on Insta</span>
         </a>
@@ -80,6 +93,10 @@
             alt=""
             class="link-ic"
             aria-hidden="true"
+            width="300"
+            height="300"
+            loading="lazy"
+            decoding="async"
           />
           <span>Stream “It's Not That Deep”</span>
         </a>
@@ -94,6 +111,10 @@
             alt=""
             class="link-ic"
             aria-hidden="true"
+            width="300"
+            height="300"
+            loading="lazy"
+            decoding="async"
           />
           <span>Stream “My Music”</span>
         </a>
@@ -108,6 +129,10 @@
             alt=""
             class="link-ic"
             aria-hidden="true"
+            width="300"
+            height="300"
+            loading="lazy"
+            decoding="async"
           />
           <span>Stream “Personal”</span>
         </a>
@@ -122,6 +147,10 @@
             alt=""
             class="link-ic"
             aria-hidden="true"
+            width="300"
+            height="300"
+            loading="lazy"
+            decoding="async"
           />
           <span>Stream “Lives”</span>
         </a>
@@ -132,6 +161,10 @@
           class="jn-mark-foot"
           src="assets/just-nieman-logo.png"
           alt="JN mark"
+          width="60"
+          height="60"
+          loading="lazy"
+          decoding="async"
         />
       </a>
       <p class="links-foot">
@@ -141,6 +174,6 @@
         >
       </p>
     </main>
-    <script src="js/main.js"></script>
+    <script src="js/main.js" defer></script>
   </body>
 </html>
