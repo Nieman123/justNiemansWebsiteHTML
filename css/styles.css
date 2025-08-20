@@ -1,3 +1,26 @@
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/inter/v19/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2")
+    format("woff2");
+  size-adjust: 100%;
+  ascent-override: 90%;
+  descent-override: 10%;
+}
+@font-face {
+  font-family: "Bebas Neue";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/bebasneue/v15/JTUSjIg69CK48gW7PXoo9Wlhyw.woff2")
+    format("woff2");
+  size-adjust: 100%;
+  ascent-override: 90%;
+  descent-override: 10%;
+}
+
 /* Docked bottom nav */
 .dock-nav {
   position: fixed;
@@ -586,11 +609,13 @@ body {
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
 }
 .link-ic {
-  width: 76px;
-  height: 76px;
   object-fit: cover;
   border-radius: 12px;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+}
+.link-icon {
+  width: 64px;
+  height: 64px;
 }
 .link-btn span {
   display: block;
@@ -637,9 +662,9 @@ body {
     font-size: 18px;
     border-radius: 20px;
   }
-  .link-ic {
-    width: 68px;
-    height: 68px;
+  .link-icon {
+    width: 56px;
+    height: 56px;
     border-radius: 10px;
   }
   .dock-toggle {

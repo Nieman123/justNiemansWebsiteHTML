@@ -205,7 +205,7 @@ const GALLERY_ITEMS = [
       img.setAttribute("role", "listitem");
       img.loading = "lazy";
       img.decoding = "async";
-      img.width = 68;
+      img.width = 120;
       img.height = 120;
       if (Array.isArray(item) && item[2] && !match) {
         img.dataset.video = item[2];
@@ -227,6 +227,8 @@ const GALLERY_ITEMS = [
           video.playsInline = true;
           video.autoplay = true;
           video.poster = "optimized/shell-thumb-720.webp";
+          video.width = 360;
+          video.height = 640;
           video.setAttribute("aria-label", img.alt || "Video");
           const s1 = document.createElement("source");
           s1.src = "optimized/video/shell-av1.webm";
