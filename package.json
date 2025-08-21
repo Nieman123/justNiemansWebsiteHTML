@@ -2,9 +2,11 @@
   "devDependencies": {
     "fast-glob": "^3.3.3",
     "picocolors": "^1.1.1",
-    "sharp": "^0.34.3"
+    "sharp": "^0.34.3",
+    "@lhci/cli": "^0.13.0"
   },
   "scripts": {
-    "img:build": "node tools/build-images.mjs"
+    "img:build": "node tools/build-images.mjs",
+    "lhci": "lhci autorun --collect.staticDistDir=. --upload.target=filesystem --assert.preset=lighthouse:recommended"
   }
 }
