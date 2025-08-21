@@ -613,6 +613,7 @@ body {
   object-fit: cover;
   border-radius: 12px;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+  flex-shrink: 0;
 }
 .link-icon {
   width: 64px;
@@ -620,8 +621,9 @@ body {
 }
 .link-btn span {
   display: block;
+  flex: 1;
   line-height: 1.15;
-  text-align: left;
+  text-align: center;
 }
 .jn-mark-foot {
   width: 60px;
