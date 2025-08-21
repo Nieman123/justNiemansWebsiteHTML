@@ -33,6 +33,17 @@ jobs:
         run: echo "No build step configured"
 
 
+      - name: Lighthouse CI (pre-deploy)
+        run: npm run lhci
+        continue-on-error: true
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: .lighthouseci
+
       # Live deploy on pushes to main
       - name: Deploy Live (main)
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
