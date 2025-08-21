@@ -1,8 +1,10 @@
 {
-  "devDependencies": {
+  "dependencies": {
     "fast-glob": "^3.3.3",
     "picocolors": "^1.1.1",
-    "sharp": "^0.34.3",
+    "sharp": "^0.34.3"
+  },
+  "devDependencies": {
     "@lhci/cli": "^0.13.0"
   },
   "scripts": {
