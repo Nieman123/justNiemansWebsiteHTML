@@ -31,6 +31,8 @@
 
   const BACKSLASH = "\\";
   const DEFAULT_FRAME_LINES = 4;
+  const BOMB_ART = [" O ", "/|" + BACKSLASH, " | "].join("\n");
+  const BOMB_EXPLODE_ART = [" * ", "***", " * "].join("\n");
 
   function normalizeFrame(frameStr, targetLines, targetCols) {
     const lines = frameStr.split("\n");
@@ -263,6 +265,7 @@
     ".link-btn",
     ".legal-card",
     ".footer-legal",
+    "[data-stickman-zone]",
   ].join(",");
 
   const MIN_PLATFORM_WIDTH = 60;
@@ -285,6 +288,38 @@
   const LAND_SQUASH_DURATION = 140;
   const LAND_DUST_DURATION = 180;
   const LAND_DUST_THRESHOLD = 420;
+  const REACT_MIN_WIDTH = 90;
+  const REACT_MIN_HEIGHT = 26;
+  const REACT_COOLDOWN_MIN = 1500;
+  const REACT_COOLDOWN_MAX = 3000;
+  const PARTICLE_LIFETIME_MIN = 300;
+  const PARTICLE_LIFETIME_MAX = 600;
+  const DANGER_SELECTOR = ".about-hero";
+  const BOMB_GRAVITY = 2400;
+  const BOMB_SPAWN_Y = -80;
+  const BOMB_OFFSET_MIN = 15;
+  const BOMB_OFFSET_MAX = 30;
+  const BOMB_FUSE_MIN = 900;
+  const BOMB_FUSE_MAX = 1400;
+  const BOMB_EXPLODE_DURATION = 160;
+  const BOMB_COOLDOWN_MIN = 20000;
+  const BOMB_COOLDOWN_MAX = 30000;
+  const BOMB_MAX_TRIGGERS = 3;
+  const BOMB_SHAKE_MIN = 2;
+  const BOMB_SHAKE_MAX = 4;
+  const ZONE_SMOOTH_SPEED = 9;
+  const INVERT_MIN_DURATION = 400;
+  const INVERT_MAX_DURATION = 700;
+  const ZONE_CONFIG = {
+    lowGravity: { gravityMul: 0.6, jumpMul: 1.05, priority: 1 },
+    heavyGravity: { gravityMul: 1.6, jumpMul: 0.9, priority: 2 },
+    invertGravity: { gravityMul: -0.9, jumpMul: 1.0, priority: 3 },
+  };
+  const ZONE_FALLBACKS = [
+    { selector: ".about-hero", type: "lowGravity" },
+    { selector: "#releases", type: "heavyGravity" },
+    { selector: "#contact", type: "invertGravity" },
+  ];
   const IDLE_VIBE_MIN_DELAY = 5000;
   const IDLE_VIBE_MAX_DELAY = 10000;
   const IDLE_VIBE_COOLDOWN_MIN = 10000;
@@ -321,6 +356,10 @@
     stumbleUntil: 0,
     stumbleCooldownUntil: 0,
     jumpLockedUntil: 0,
+    inputLockedUntil: 0,
+    ragdollUntil: 0,
+    shakeUntil: 0,
+    shakeMagnitude: 0,
     stareUntil: 0,
     landSquashUntil: 0,
     landSquashStrength: 0,
@@ -348,6 +387,36 @@
   let logoVisible = false;
   let legacyTelemetryRevealed = false;
   let jumpPresses = [];
+  let particleLayer = null;
+  const reactCooldowns = new WeakMap();
+  let hazardTargetEl = null;
+  let bombEl = null;
+  const bombState = {
+    active: false,
+    phase: "idle",
+    x: 0,
+    y: 0,
+    vy: 0,
+    targetY: 0,
+    spawnedAt: 0,
+    fuseUntil: 0,
+    explodeUntil: 0,
+    cooldownUntil: 0,
+    triggers: 0,
+    width: 0,
+    height: 0,
+  };
+  let zoneElements = [];
+  let zoneMap = new WeakMap();
+  const zoneState = {
+    activeType: null,
+    activeEl: null,
+    gravityMul: 1,
+    jumpMul: 1,
+    targetGravityMul: 1,
+    targetJumpMul: 1,
+    invertUntil: 0,
+  };
 
   let platforms = [];
   let rafId = null;
@@ -365,6 +434,10 @@
     if (current < target) return Math.min(current + amount, target);
     if (current > target) return Math.max(current - amount, target);
     return target;
+  }
+
+  function lerp(from, to, t) {
+    return from + (to - from) * t;
   }
 
   function getGroundTop() {
@@ -501,9 +574,7 @@
           gap: 8px;
         }
         .stickman-hud-right {
-          left: calc(12px + env(safe-area-inset-left));
-          right: auto;
-          bottom: calc(86px + env(safe-area-inset-bottom));
+          right: calc(12px + env(safe-area-inset-right));
           align-items: center;
         }
         .stickman-hud-pad {
@@ -634,8 +705,9 @@
       () => {
         input.jumpHeld = false;
         input.jump = false;
-        if (state.vy < -JUMP_CUT_SPEED) {
-          state.vy = -JUMP_CUT_SPEED;
+        const cutSpeed = getEffectiveJumpSpeed(JUMP_CUT_SPEED);
+        if (state.vy < -cutSpeed) {
+          state.vy = -cutSpeed;
         }
       }
     );
@@ -725,6 +797,10 @@
       state.currentPlatform =
         platforms.find((p) => p.el === state.currentPlatform.el) || null;
     }
+
+    if (zoneElements.length) {
+      refreshZoneRects();
+    }
   }
 
   let platformRefreshQueued = false;
@@ -735,6 +811,446 @@
       platformRefreshQueued = false;
       refreshPlatforms();
     });
+  }
+
+  // Impact feedback for landings (subtle jiggle + small particles).
+  function hasActiveAnimation(style) {
+    const names = style.animationName.split(",");
+    const durations = style.animationDuration.split(",");
+    for (let i = 0; i < names.length; i += 1) {
+      const name = names[i].trim();
+      const duration = parseFloat((durations[i] || durations[0] || "0").trim());
+      if (name && name !== "none" && duration > 0) return true;
+    }
+    return false;
+  }
+
+  function isReactableElement(el) {
+    if (!el || el === stickman || el.closest("#" + STICKMAN_ID)) return false;
+    if (!isElementVisible(el)) return false;
+    const rect = el.getBoundingClientRect();
+    if (rect.width < REACT_MIN_WIDTH || rect.height < REACT_MIN_HEIGHT)
+      return false;
+    const style = window.getComputedStyle(el);
+    if (style.position === "fixed") return false;
+    if (hasActiveAnimation(style)) return false;
+    return true;
+  }
+
+  function canReactToElement(el, now) {
+    const nextAt = reactCooldowns.get(el) || 0;
+    if (now < nextAt) return false;
+    reactCooldowns.set(el, now + rand(REACT_COOLDOWN_MIN, REACT_COOLDOWN_MAX));
+    return true;
+  }
+
+  function jiggleElement(el, impactSpeed) {
+    if (reducedMotion || !el || typeof el.animate !== "function") return;
+    const style = window.getComputedStyle(el);
+    const base = style.transform === "none" ? "" : style.transform;
+    const baseFrame = base || "none";
+    const distance = clamp(2 + impactSpeed / 420, 2, 6);
+    const squash = clamp(1 - impactSpeed / 5200, 0.97, 0.99);
+    const impactTransform = base
+      ? `${base} translateY(${distance}px) scaleY(${squash})`
+      : `translateY(${distance}px) scaleY(${squash})`;
+    el.animate(
+      [
+        { transform: baseFrame },
+        { transform: impactTransform },
+        { transform: baseFrame },
+      ],
+      {
+        duration: clamp(140 + impactSpeed / 14, 140, 200),
+        easing: "cubic-bezier(0.22, 0.61, 0.36, 1)",
+      }
+    );
+  }
+
+  function ensureParticleLayer() {
+    if (particleLayer) return particleLayer;
+    const layer = document.createElement("div");
+    layer.id = "stickman-impact-layer";
+    layer.setAttribute("aria-hidden", "true");
+    layer.style.position = "fixed";
+    layer.style.inset = "0";
+    layer.style.pointerEvents = "none";
+    layer.style.zIndex = "9990";
+    layer.style.overflow = "hidden";
+    document.body.appendChild(layer);
+    particleLayer = layer;
+    return layer;
+  }
+
+  function spawnImpactParticles(el, impactSpeed) {
+    if (reducedMotion || !el) return;
+    const layer = ensureParticleLayer();
+    const style = window.getComputedStyle(el);
+    const baseColor = style.color || "rgba(220, 220, 230, 0.75)";
+    const glyphs = [".", "-"];
+    const count = Math.round(clamp(3 + impactSpeed / 480, 3, 6));
+    const originX = state.x + state.width * 0.5;
+    const originY = state.y + state.height - 2;
+
+    for (let i = 0; i < count; i += 1) {
+      const particle = document.createElement("span");
+      particle.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+      particle.style.position = "absolute";
+      particle.style.left = `${Math.round(originX)}px`;
+      particle.style.top = `${Math.round(originY)}px`;
+      particle.style.fontSize = "10px";
+      particle.style.lineHeight = "1";
+      particle.style.fontFamily =
+        "\"SFMono-Regular\", \"Menlo\", \"Consolas\", \"Liberation Mono\", \"Courier New\", monospace";
+      particle.style.color = baseColor;
+      particle.style.opacity = "0.6";
+      particle.style.pointerEvents = "none";
+      layer.appendChild(particle);
+
+      const dx = rand(-8, 8);
+      const dyUp = rand(-10, -4);
+      const dyDown = dyUp + rand(6, 12);
+      const duration = rand(PARTICLE_LIFETIME_MIN, PARTICLE_LIFETIME_MAX);
+      if (typeof particle.animate === "function") {
+        const anim = particle.animate(
+          [
+            { transform: "translate(0, 0)", opacity: 0.6 },
+            { transform: `translate(${dx}px, ${dyUp}px)`, opacity: 0.5 },
+            {
+              transform: `translate(${dx * 1.1}px, ${dyDown}px)`,
+              opacity: 0,
+            },
+          ],
+          { duration, easing: "ease-out" }
+        );
+        anim.onfinish = () => particle.remove();
+      } else {
+        window.setTimeout(() => {
+          particle.remove();
+        }, duration);
+      }
+    }
+  }
+
+  function spawnBurstParticles(x, y, count, color) {
+    const layer = ensureParticleLayer();
+    const glyphs = [".", "*"];
+    for (let i = 0; i < count; i += 1) {
+      const particle = document.createElement("span");
+      particle.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+      particle.style.position = "absolute";
+      particle.style.left = `${Math.round(x)}px`;
+      particle.style.top = `${Math.round(y)}px`;
+      particle.style.fontSize = "10px";
+      particle.style.lineHeight = "1";
+      particle.style.fontFamily =
+        "\"SFMono-Regular\", \"Menlo\", \"Consolas\", \"Liberation Mono\", \"Courier New\", monospace";
+      particle.style.color = color;
+      particle.style.opacity = "0.7";
+      particle.style.pointerEvents = "none";
+      layer.appendChild(particle);
+
+      const dx = rand(-12, 12);
+      const dyUp = rand(-14, -6);
+      const dyDown = dyUp + rand(8, 16);
+      const duration = rand(PARTICLE_LIFETIME_MIN, PARTICLE_LIFETIME_MAX);
+      if (typeof particle.animate === "function") {
+        const anim = particle.animate(
+          [
+            { transform: "translate(0, 0)", opacity: 0.7 },
+            { transform: `translate(${dx}px, ${dyUp}px)`, opacity: 0.5 },
+            {
+              transform: `translate(${dx * 1.1}px, ${dyDown}px)`,
+              opacity: 0,
+            },
+          ],
+          { duration, easing: "ease-out" }
+        );
+        anim.onfinish = () => particle.remove();
+      } else {
+        window.setTimeout(() => {
+          particle.remove();
+        }, duration);
+      }
+    }
+  }
+
+  function triggerImpactFeedback(el, impactSpeed, now) {
+    if (!el) return;
+    if (!isReactableElement(el)) return;
+    if (!canReactToElement(el, now)) return;
+    jiggleElement(el, impactSpeed);
+    spawnImpactParticles(el, impactSpeed);
+  }
+
+  // Field manager (physics anomalies).
+  function addZoneElement(el, type) {
+    const config = ZONE_CONFIG[type];
+    if (!config) return;
+    if (zoneMap.has(el)) return;
+    zoneMap.set(el, type);
+    zoneElements.push({
+      el,
+      type,
+      priority: config.priority,
+      rect: null,
+    });
+  }
+
+  function setupZoneElements() {
+    zoneElements = [];
+    zoneMap = new WeakMap();
+
+    document.querySelectorAll("[data-stickman-zone]").forEach((el) => {
+      const type = el.getAttribute("data-stickman-zone");
+      addZoneElement(el, type);
+    });
+
+    ZONE_FALLBACKS.forEach((def) => {
+      document.querySelectorAll(def.selector).forEach((el) => {
+        addZoneElement(el, def.type);
+      });
+    });
+
+    refreshZoneRects();
+  }
+
+  function refreshZoneRects() {
+    zoneElements.forEach((zone) => {
+      zone.rect = zone.el.getBoundingClientRect();
+    });
+  }
+
+  function getZoneEntryForElement(el) {
+    if (!el) return null;
+    let best = null;
+    for (const zone of zoneElements) {
+      if (zone.el === el || zone.el.contains(el)) {
+        if (!best || zone.priority > best.priority) {
+          best = zone;
+        }
+      }
+    }
+    return best;
+  }
+
+  function findZoneAtFoot() {
+    const footX = state.x + state.width * 0.5;
+    const footY = state.y + state.height + 2;
+    let best = null;
+    for (const zone of zoneElements) {
+      const rect = zone.rect;
+      if (!rect) continue;
+      if (footX < rect.left || footX > rect.right) continue;
+      if (footY < rect.top - 6 || footY > rect.top + 8) continue;
+      if (!best || zone.priority > best.priority) {
+        best = zone;
+      }
+    }
+    return best;
+  }
+
+  function resolveActiveZone() {
+    if (!state.onGround) return null;
+    if (state.currentPlatform && state.currentPlatform.el) {
+      const zone = getZoneEntryForElement(state.currentPlatform.el);
+      if (zone) return zone;
+    }
+    return findZoneAtFoot();
+  }
+
+  function updateZoneState(dt, now) {
+    const activeZone = resolveActiveZone();
+    zoneState.activeType = activeZone ? activeZone.type : null;
+    zoneState.activeEl = activeZone ? activeZone.el : null;
+
+    if (zoneState.invertUntil && now >= zoneState.invertUntil) {
+      zoneState.invertUntil = 0;
+    }
+    if (state.onGround && zoneState.activeType !== "invertGravity") {
+      zoneState.invertUntil = 0;
+    }
+
+    const config = zoneState.activeType
+      ? ZONE_CONFIG[zoneState.activeType]
+      : null;
+    const targetGravityMul = config ? config.gravityMul : 1;
+    const targetJumpMul = config ? config.jumpMul : 1;
+
+    zoneState.targetJumpMul = targetJumpMul;
+    zoneState.targetGravityMul =
+      zoneState.invertUntil && now < zoneState.invertUntil
+        ? ZONE_CONFIG.invertGravity.gravityMul
+        : targetGravityMul;
+
+    const t = 1 - Math.exp(-ZONE_SMOOTH_SPEED * dt);
+    zoneState.gravityMul = lerp(zoneState.gravityMul, zoneState.targetGravityMul, t);
+    zoneState.jumpMul = lerp(zoneState.jumpMul, zoneState.targetJumpMul, t);
+  }
+
+  function getEffectiveGravity() {
+    return GRAVITY * zoneState.gravityMul;
+  }
+
+  function getEffectiveJumpSpeed(base) {
+    return base * zoneState.jumpMul;
+  }
+
+  function getZoneTint(el) {
+    if (!el) return "rgba(230, 230, 238, 0.7)";
+    const style = window.getComputedStyle(el);
+    return style.color || "rgba(230, 230, 238, 0.7)";
+  }
+
+  function triggerInvertGravity(now) {
+    if (now < zoneState.invertUntil) return;
+    zoneState.invertUntil = now + rand(INVERT_MIN_DURATION, INVERT_MAX_DURATION);
+    if (!reducedMotion) {
+      const shake = 1.5;
+      state.shakeUntil = Math.max(state.shakeUntil, now + 120);
+      state.shakeMagnitude = Math.max(state.shakeMagnitude || 0, shake);
+    }
+  }
+
+  // Hazard manager (rare drop + knockback).
+  function setupHazardTarget() {
+    hazardTargetEl = document.querySelector(DANGER_SELECTOR);
+  }
+
+  function isDangerPlatform(el) {
+    if (!hazardTargetEl || !el) return false;
+    return el === hazardTargetEl || hazardTargetEl.contains(el);
+  }
+
+  function ensureBombElement() {
+    if (bombEl) return;
+    const bomb = document.createElement("pre");
+    bomb.id = "stickman-bomb";
+    bomb.setAttribute("aria-hidden", "true");
+    bomb.textContent = BOMB_ART;
+    bomb.style.position = "fixed";
+    bomb.style.left = "0";
+    bomb.style.top = "0";
+    bomb.style.zIndex = "9995";
+    bomb.style.pointerEvents = "none";
+    bomb.style.fontFamily =
+      "\"SFMono-Regular\", \"Menlo\", \"Consolas\", \"Liberation Mono\", \"Courier New\", monospace";
+    bomb.style.fontSize = "12px";
+    bomb.style.lineHeight = "1";
+    bomb.style.whiteSpace = "pre";
+    bomb.style.color = "#f6f6fb";
+    bomb.style.textShadow = "0 1px 2px rgba(0, 0, 0, 0.6)";
+    bomb.style.transform = "translate3d(0, 0, 0)";
+    bomb.style.display = "none";
+    document.body.appendChild(bomb);
+    bombEl = bomb;
+
+    bombEl.style.visibility = "hidden";
+    bombEl.style.display = "block";
+    const rect = bombEl.getBoundingClientRect();
+    bombState.width = rect.width;
+    bombState.height = rect.height;
+    bombEl.style.display = "none";
+    bombEl.style.visibility = "visible";
+  }
+
+  function spawnBomb(platformTop, now) {
+    ensureBombElement();
+    bombState.active = true;
+    bombState.phase = "drop";
+    bombState.spawnedAt = now;
+    bombState.vy = 0;
+    const landingTop =
+      platformTop == null ? getGroundTop() : Math.min(platformTop, getGroundTop());
+    bombState.targetY = landingTop - bombState.height;
+
+    const offset =
+      rand(BOMB_OFFSET_MIN, BOMB_OFFSET_MAX) * (Math.random() < 0.5 ? -1 : 1);
+    const stickCenterX = state.x + state.width / 2;
+    bombState.x = clamp(
+      stickCenterX + offset - bombState.width / 2,
+      6,
+      window.innerWidth - bombState.width - 6
+    );
+    bombState.y = BOMB_SPAWN_Y;
+    bombEl.textContent = BOMB_ART;
+    bombEl.style.display = "block";
+    bombState.cooldownUntil =
+      now + rand(BOMB_COOLDOWN_MIN, BOMB_COOLDOWN_MAX);
+    bombState.triggers += 1;
+  }
+
+  function maybeTriggerBomb(landedEl, platformTop, now) {
+    if (!landedEl || !isDangerPlatform(landedEl)) return;
+    if (bombState.active) return;
+    if (bombState.triggers >= BOMB_MAX_TRIGGERS) return;
+    if (now < bombState.cooldownUntil) return;
+    spawnBomb(platformTop, now);
+  }
+
+  function applyBombImpulse(now) {
+    const bombCenterX = bombState.x + bombState.width / 2;
+    const bombCenterY = bombState.y + bombState.height / 2;
+    const stickCenterX = state.x + state.width / 2;
+    const stickCenterY = state.y + state.height / 2;
+    const dx = stickCenterX - bombCenterX;
+    const kickX = clamp(dx * 2.2, -260, 260);
+    const upwardKick = JUMP_SPEED * 1.3;
+
+    state.vx += kickX;
+    state.vy -= upwardKick;
+    state.onGround = false;
+    state.inputLockedUntil = now + 400;
+    state.ragdollUntil = now + 400;
+    state.behaviorState = "normal";
+    state.animName = "";
+    state.animFrame = 0;
+    state.animNextAt = 0;
+
+    if (!reducedMotion) {
+      state.shakeUntil = now + rand(120, 180);
+      state.shakeMagnitude = rand(BOMB_SHAKE_MIN, BOMB_SHAKE_MAX);
+    }
+  }
+
+  function updateBomb(dt, now) {
+    if (!bombState.active || !bombEl) return;
+
+    if (bombState.phase === "drop") {
+      bombState.vy += BOMB_GRAVITY * dt;
+      bombState.y += bombState.vy * dt;
+      if (bombState.y >= bombState.targetY) {
+        bombState.y = bombState.targetY;
+        bombState.vy = 0;
+        bombState.phase = "fuse";
+        bombState.fuseUntil = now + rand(BOMB_FUSE_MIN, BOMB_FUSE_MAX);
+      }
+    } else if (bombState.phase === "fuse") {
+      if (now >= bombState.fuseUntil) {
+        bombState.phase = "explode";
+        bombState.explodeUntil = now + BOMB_EXPLODE_DURATION;
+        bombEl.textContent = BOMB_EXPLODE_ART;
+        applyBombImpulse(now);
+        const count = reducedMotion ? 2 : 4;
+        spawnBurstParticles(
+          bombState.x + bombState.width / 2,
+          bombState.y + bombState.height / 2,
+          count,
+          "rgba(240, 240, 248, 0.7)"
+        );
+      }
+    } else if (bombState.phase === "explode") {
+      if (now >= bombState.explodeUntil) {
+        bombState.active = false;
+        bombState.phase = "idle";
+        bombEl.style.display = "none";
+        bombEl.textContent = BOMB_ART;
+      }
+    }
+
+    bombEl.style.transform = `translate3d(${Math.round(
+      bombState.x
+    )}px, ${Math.round(bombState.y)}px, 0)`;
   }
 
   function measureStickman() {
@@ -780,6 +1296,10 @@
     state.pauseUntil = 0;
     state.stumbleUntil = 0;
     state.jumpLockedUntil = 0;
+    state.inputLockedUntil = 0;
+    state.ragdollUntil = 0;
+    state.shakeUntil = 0;
+    state.shakeMagnitude = 0;
     state.idleVibeEligibleAt = 0;
     state.stareUntil = 0;
     state.animName = "";
@@ -870,14 +1390,27 @@
       now - state.lastIdleJumpAt > 700 &&
       Math.random() < 0.6
     ) {
-      state.vy = -IDLE_JUMP_SPEED;
+      state.vy = -getEffectiveJumpSpeed(IDLE_JUMP_SPEED);
       state.onGround = false;
       state.lastIdleJumpAt = now;
+      if (zoneState.activeType === "lowGravity") {
+        const count = reducedMotion ? 0 : 2;
+        if (count) {
+          spawnBurstParticles(
+            state.x + state.width * 0.5,
+            state.y + state.height - 2,
+            count,
+            getZoneTint(zoneState.activeEl)
+          );
+        }
+      }
     }
   }
 
   function updateControl(dt, now) {
-    const locked = state.behaviorState === "stumble" || now < state.pauseUntil;
+    const inputLocked = now < state.inputLockedUntil;
+    const locked =
+      state.behaviorState === "stumble" || now < state.pauseUntil || inputLocked;
     const maxSpeed = input.sprint ? SPRINT_SPEED : CONTROL_SPEED;
 
     if (locked) {
@@ -903,13 +1436,31 @@
 
     state.vx = clamp(state.vx, -maxSpeed, maxSpeed);
 
+    if (inputLocked) {
+      input.jump = false;
+      input.jumpHeld = false;
+    }
     if (now < state.jumpLockedUntil) {
       input.jump = false;
     }
     if (input.jump) {
       if (state.onGround) {
-        state.vy = -JUMP_SPEED;
+        state.vy = -getEffectiveJumpSpeed(JUMP_SPEED);
         state.onGround = false;
+        if (zoneState.activeType === "lowGravity") {
+          const count = reducedMotion ? 0 : 3;
+          if (count) {
+            spawnBurstParticles(
+              state.x + state.width * 0.5,
+              state.y + state.height - 2,
+              count,
+              getZoneTint(zoneState.activeEl)
+            );
+          }
+        }
+        if (zoneState.activeType === "invertGravity") {
+          triggerInvertGravity(now);
+        }
       }
       input.jump = false;
     }
@@ -1101,8 +1652,9 @@
   function applyPhysics(dt, now) {
     const wasOnGround = state.onGround;
 
-    state.vy += GRAVITY * dt;
-    state.vy = Math.min(state.vy, MAX_FALL_SPEED);
+    const gravity = getEffectiveGravity();
+    state.vy += gravity * dt;
+    state.vy = clamp(state.vy, -MAX_FALL_SPEED, MAX_FALL_SPEED);
 
     let nextX = state.x + state.vx * dt;
     let nextY = state.y + state.vy * dt;
@@ -1115,6 +1667,9 @@
 
     state.onGround = false;
     let impactSpeed = 0;
+    let landedEl = null;
+    let landedTop = null;
+    let landedZone = null;
 
     if (state.vy >= 0) {
       const prevBottom = state.y + state.height;
@@ -1127,6 +1682,11 @@
         state.vy = 0;
         state.onGround = true;
         state.currentPlatform = landing.el ? landing : null;
+        landedEl = landing.el || null;
+        landedTop = landing.top;
+        if (landedEl) {
+          landedZone = getZoneEntryForElement(landedEl);
+        }
       } else {
         state.currentPlatform = null;
       }
@@ -1137,6 +1697,11 @@
     const maxY = Math.max(0, window.innerHeight - state.height);
     state.x = nextX;
     state.y = clamp(nextY, 0, maxY);
+
+    if (gravity < 0 && state.y <= 0 && state.vy < 0) {
+      state.y = 0;
+      state.vy = 0;
+    }
 
     if (!state.onGround && state.y >= maxY) {
       impactSpeed = Math.abs(state.vy);
@@ -1152,6 +1717,21 @@
         state.dustUntil = now + LAND_DUST_DURATION;
         state.dustChar = Math.random() < 0.5 ? "." : "*";
         state.dustSide = state.facing >= 0 ? 1 : -1;
+      }
+      if (landedEl) {
+        triggerImpactFeedback(landedEl, impactSpeed, now);
+        maybeTriggerBomb(landedEl, landedTop, now);
+      }
+      if (landedZone && landedZone.type === "heavyGravity") {
+        const count = reducedMotion ? 0 : 3;
+        if (count) {
+          spawnBurstParticles(
+            state.x + state.width * 0.5,
+            state.y + state.height - 2,
+            count,
+            getZoneTint(landedZone.el)
+          );
+        }
       }
     }
   }
@@ -1173,6 +1753,9 @@
   function getActiveAnimation(now) {
     if (state.stareUntil && now < state.stareUntil) {
       return { key: "stare", anim: STARE_ANIM };
+    }
+    if (state.ragdollUntil && now < state.ragdollUntil) {
+      return { key: "fall", anim: ANIMATIONS.fall };
     }
     if (state.behaviorState === "idleVibe" && state.vibeName) {
       return {
@@ -1270,10 +1853,17 @@
     updateArtTransform(now, state.animName, state.animFrame);
   }
 
+  function getShakeOffset(now) {
+    if (!state.shakeUntil || now >= state.shakeUntil) return { x: 0, y: 0 };
+    const mag = state.shakeMagnitude || 0;
+    return { x: rand(-mag, mag), y: rand(-mag, mag) };
+  }
+
   function render(now) {
+    const shake = getShakeOffset(now);
     stickman.style.transform = `translate3d(${Math.round(
-      state.x
-    )}px, ${Math.round(state.y)}px, 0)`;
+      state.x + shake.x
+    )}px, ${Math.round(state.y + shake.y)}px, 0)`;
     updateAnimation(now);
   }
 
@@ -1288,6 +1878,8 @@
     const dt = Math.min(0.05, (now - state.lastTime) / 1000);
     state.lastTime = now;
 
+    updateZoneState(dt, now);
+
     if (state.control) {
       updateControl(dt, now);
     } else if (idleEnabled) {
@@ -1295,6 +1887,7 @@
     }
 
     applyPhysics(dt, now);
+    updateBomb(dt, now);
     updateFacing();
 
     // Idle vibes and stumble state transitions.
@@ -1303,7 +1896,7 @@
     } else if (state.onGround && !isStandingOnLogo()) {
       resetLegacyJumpPresses();
     }
-
+ 
     if (state.behaviorState === "idleVibe") {
       if (state.control || !state.onGround || now >= state.vibeUntil) {
         endIdleVibe();
@@ -1389,8 +1982,9 @@
     }
     if (key === "arrowup" || key === "w" || key === " " || key === "spacebar") {
       input.jumpHeld = false;
-      if (state.vy < -JUMP_CUT_SPEED) {
-        state.vy = -JUMP_CUT_SPEED;
+      const cutSpeed = getEffectiveJumpSpeed(JUMP_CUT_SPEED);
+      if (state.vy < -cutSpeed) {
+        state.vy = -cutSpeed;
       }
       e.preventDefault();
     }
@@ -1460,11 +2054,13 @@
     });
   }
 
+  setupZoneElements();
   refreshPlatforms();
   placeInitial();
   render(performance.now());
 
   setupLogoObserver();
+  setupHazardTarget();
 
   window.setInterval(refreshPlatforms, 1600);
   window.addEventListener("load", () => {
