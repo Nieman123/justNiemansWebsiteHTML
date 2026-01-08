@@ -501,7 +501,9 @@
           gap: 8px;
         }
         .stickman-hud-right {
-          right: calc(12px + env(safe-area-inset-right));
+          left: calc(12px + env(safe-area-inset-left));
+          right: auto;
+          bottom: calc(86px + env(safe-area-inset-bottom));
           align-items: center;
         }
         .stickman-hud-pad {
