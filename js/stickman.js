@@ -1,0 +1,1309 @@
+(() => {
+  const STICKMAN_ID = "stickman";
+  if (document.getElementById(STICKMAN_ID)) return;
+
+  const prefersReducedMotionQuery = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  );
+  let reducedMotion = prefersReducedMotionQuery.matches;
+  let idleEnabled = !reducedMotion;
+
+  const stickman = document.createElement("div");
+  stickman.id = STICKMAN_ID;
+  stickman.setAttribute("role", "button");
+  stickman.setAttribute("tabindex", "0");
+  stickman.setAttribute("aria-pressed", "false");
+  stickman.setAttribute("aria-label", "Click to control the stickman");
+  stickman.title = "Click to control the stickman";
+
+  const art = document.createElement("pre");
+  art.className = "stickman-art";
+  stickman.appendChild(art);
+
+  const hint = document.createElement("div");
+  hint.id = "stickman-hint";
+  hint.textContent =
+    "Control mode: A/D or arrows, Space to jump. Click again to exit.";
+  hint.setAttribute("aria-hidden", "true");
+  stickman.appendChild(hint);
+
+  document.body.appendChild(stickman);
+
+  const BACKSLASH = "\\";
+  const DEFAULT_FRAME_LINES = 4;
+
+  function normalizeFrame(frameStr, targetLines, targetCols) {
+    const lines = frameStr.split("\n");
+    const out = [];
+    for (let i = 0; i < targetLines; i += 1) {
+      let line = lines[i] || "";
+      if (line.length > targetCols) {
+        line = line.slice(0, targetCols);
+      }
+      out.push(line.padEnd(targetCols, " "));
+    }
+    return out.join("\n");
+  }
+
+  function getMaxCols(frames, targetLines) {
+    let maxCols = 0;
+    frames.forEach((frame) => {
+      const lines = frame.split("\n");
+      for (let i = 0; i < targetLines; i += 1) {
+        const len = (lines[i] || "").length;
+        if (len > maxCols) maxCols = len;
+      }
+    });
+    return maxCols;
+  }
+
+  function buildFrames(frames, targetLines = DEFAULT_FRAME_LINES, targetCols) {
+    const cols = targetCols ?? getMaxCols(frames, targetLines);
+    return frames.map((frame) => normalizeFrame(frame, targetLines, cols));
+  }
+
+  const IDLE_LINES = 4;
+  const RUN_LINES = 3;
+  const AIR_LINES = 4;
+  const VIBE_LINES = 4;
+  const STUMBLE_LINES = 4;
+
+  // Animation definitions (fixed-width ASCII frames).
+  const ANIMATIONS = {
+    idle: {
+      frames: buildFrames(
+        [
+          ["  o", " /|" + BACKSLASH, " / " + BACKSLASH].join("\n"),
+        ],
+        IDLE_LINES
+      ),
+      frameDuration: 320,
+      loop: true,
+    },
+    runRight: {
+      frames: buildFrames(
+        [
+          [" o", "/|" + BACKSLASH, "/ " + BACKSLASH].join("\n"),
+          [" o", "/|" + BACKSLASH, "/" + BACKSLASH + " "].join("\n"),
+          [" o", "/|" + BACKSLASH, " /" + BACKSLASH + BACKSLASH].join("\n"),
+          [" o", BACKSLASH + "|" + BACKSLASH, "/ " + BACKSLASH].join("\n"),
+        ],
+        RUN_LINES
+      ),
+      frameDuration: 100,
+      loop: true,
+    },
+    runLeft: {
+      frames: buildFrames(
+        [
+          ["o ", "/|" + BACKSLASH, "/ " + BACKSLASH].join("\n"),
+          ["o ", "/|" + BACKSLASH, " /" + BACKSLASH].join("\n"),
+          ["o ", "/|" + BACKSLASH, "/" + BACKSLASH + " "].join("\n"),
+          ["o ", "/|/", " / " + BACKSLASH].join("\n"),
+        ],
+        RUN_LINES
+      ),
+      frameDuration: 100,
+      loop: true,
+    },
+    jump: {
+      frames: buildFrames(
+        [
+          [
+            "  o",
+            " /|" + BACKSLASH,
+            "  |",
+            " / " + BACKSLASH,
+          ].join("\n"),
+        ],
+        AIR_LINES
+      ),
+      frameDuration: 160,
+      loop: false,
+    },
+    fall: {
+      frames: buildFrames(
+        [
+          [
+            "  o",
+            " " + BACKSLASH + "|/",
+            "  |",
+            " / " + BACKSLASH,
+          ].join("\n"),
+        ],
+        AIR_LINES
+      ),
+      frameDuration: 160,
+      loop: false,
+    },
+  };
+
+  // Idle vibe behaviors (non-looping, time-boxed).
+  const IDLE_VIBES = {
+    sit: {
+      frames: buildFrames(
+        [
+          ["  o", " /|" + BACKSLASH, " /__", "    "].join("\n"),
+          ["  o", " /|" + BACKSLASH, " /_ ", "  _ "].join("\n"),
+        ],
+        VIBE_LINES
+      ),
+      frameDuration: 220,
+      duration: 1800,
+      loop: false,
+    },
+    leanLeft: {
+      frames: buildFrames(
+        [
+          [" o", "/| ", "/ " + BACKSLASH, "    "].join("\n"),
+          [" o", "/|" + BACKSLASH, "/  ", "    "].join("\n"),
+        ],
+        VIBE_LINES
+      ),
+      frameDuration: 240,
+      duration: 1600,
+      loop: false,
+    },
+    leanRight: {
+      frames: buildFrames(
+        [
+          ["   o", "  |" + BACKSLASH, " / " + BACKSLASH, "    "].join("\n"),
+          ["   o", " /|" + BACKSLASH, "  " + BACKSLASH, "    "].join("\n"),
+        ],
+        VIBE_LINES
+      ),
+      frameDuration: 240,
+      duration: 1600,
+      loop: false,
+    },
+    nod: {
+      frames: buildFrames(
+        [
+          ["  o", " /|" + BACKSLASH, " / " + BACKSLASH, "    "].join("\n"),
+          ["   ", "  o", " /|" + BACKSLASH, " / " + BACKSLASH].join("\n"),
+        ],
+        VIBE_LINES
+      ),
+      frameDuration: 260,
+      duration: 1700,
+      loop: false,
+    },
+    lie: {
+      frames: buildFrames(
+        [
+          ["   ", " o__", " /| ", " / " + BACKSLASH].join("\n"),
+          ["   ", " o__", " /  ", " / " + BACKSLASH].join("\n"),
+        ],
+        VIBE_LINES
+      ),
+      frameDuration: 260,
+      duration: 2000,
+      loop: false,
+    },
+  };
+
+  const IDLE_VIBE_CHOICES = [
+    { name: "sit", weight: 3 },
+    { name: "leanLeft", weight: 2 },
+    { name: "leanRight", weight: 2 },
+    { name: "nod", weight: 2 },
+    { name: "lie", weight: 1 },
+  ];
+
+  // Rare stumble animation (non-looping, short).
+  const STUMBLE_ANIM = {
+    frames: buildFrames(
+      [
+        ["  o", " /|_", "  /" + BACKSLASH, "    "].join("\n"),
+        ["  o", " _|" + BACKSLASH, " /  " + BACKSLASH, "    "].join("\n"),
+        ["  o", " " + BACKSLASH + "|/", " / " + BACKSLASH, "    "].join("\n"),
+      ],
+      STUMBLE_LINES
+    ),
+    frameDuration: 110,
+    duration: 380,
+    loop: false,
+  };
+
+  art.textContent = ANIMATIONS.idle.frames[0];
+
+  const PLATFORM_SELECTORS = [
+    "a",
+    "button",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "img",
+    "section",
+    "article",
+    ".card",
+    ".tile",
+    ".hero-gallery",
+    ".gallery-main",
+    ".gallery-thumbs",
+    ".release-grid",
+    ".contact",
+    ".about-hero",
+    ".dock-nav",
+    ".dock-inner",
+    ".links-list",
+    ".link-btn",
+    ".legal-card",
+    ".footer-legal",
+  ].join(",");
+
+  const MIN_PLATFORM_WIDTH = 60;
+  const MIN_PLATFORM_HEIGHT = 20;
+  const GRAVITY = 2200;
+  const MAX_FALL_SPEED = 1700;
+  const CONTROL_SPEED = 200;
+  const SPRINT_SPEED = 280;
+  const RUN_ACCEL = 1500;
+  const RUN_DECEL = 2300;
+  const AIR_DECEL = 600;
+  const IDLE_SPEED = 110;
+  const IDLE_ACCEL = 800;
+  const IDLE_DECEL = 1200;
+  const JUMP_SPEED = 1200;
+  const IDLE_JUMP_SPEED = 560;
+  const JUMP_CUT_SPEED = 280;
+  const GROUND_MARGIN = 6;
+  const IDLE_TARGET_TTL = 6000;
+  const LAND_SQUASH_DURATION = 140;
+  const LAND_DUST_DURATION = 180;
+  const LAND_DUST_THRESHOLD = 420;
+  const IDLE_VIBE_MIN_DELAY = 5000;
+  const IDLE_VIBE_MAX_DELAY = 10000;
+  const IDLE_VIBE_COOLDOWN_MIN = 10000;
+  const IDLE_VIBE_COOLDOWN_MAX = 20000;
+  const STUMBLE_RATE = 0.008;
+  const STUMBLE_COOLDOWN_MIN = 5000;
+  const STUMBLE_COOLDOWN_MAX = 8000;
+  const STUMBLE_LOCK_EXTRA = 160;
+  const STUMBLE_RECOVER_PAUSE = 300;
+
+  const state = {
+    x: 40,
+    y: 40,
+    vx: 0,
+    vy: 0,
+    width: 0,
+    height: 0,
+    facing: 1,
+    onGround: false,
+    control: false,
+    idleTarget: null,
+    idleRestUntil: 0,
+    lastIdleJumpAt: 0,
+    currentPlatform: null,
+    animName: "idle",
+    animFrame: 0,
+    animNextAt: 0,
+    behaviorState: "normal",
+    idleVibeEligibleAt: 0,
+    vibeName: null,
+    vibeUntil: 0,
+    vibeCooldownUntil: 0,
+    pauseUntil: 0,
+    stumbleUntil: 0,
+    stumbleCooldownUntil: 0,
+    jumpLockedUntil: 0,
+    landSquashUntil: 0,
+    landSquashStrength: 0,
+    dustUntil: 0,
+    dustChar: ".",
+    dustSide: 1,
+    running: false,
+    lastTime: 0,
+  };
+
+  const input = {
+    left: false,
+    right: false,
+    sprint: false,
+    jump: false,
+    jumpHeld: false,
+  };
+
+  const isTouchCapable =
+    "ontouchstart" in window || (navigator && navigator.maxTouchPoints > 0);
+  let touchHud = null;
+  let touchButtons = null;
+  let touchHintShown = false;
+
+  let platforms = [];
+  let rafId = null;
+  let hintShown = false;
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function rand(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function approach(current, target, amount) {
+    if (current < target) return Math.min(current + amount, target);
+    if (current > target) return Math.max(current - amount, target);
+    return target;
+  }
+
+  function getGroundTop() {
+    return window.innerHeight - GROUND_MARGIN;
+  }
+
+  function shouldUseTouchHud() {
+    return isTouchCapable || window.innerWidth < 900;
+  }
+
+  function createHudButton(label, ariaLabel, className) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = className;
+    btn.textContent = label;
+    btn.setAttribute("aria-label", ariaLabel);
+    btn.setAttribute("tabindex", "0");
+    btn.disabled = true;
+    return btn;
+  }
+
+  function bindHoldButton(btn, onStart, onEnd) {
+    let activePointer = null;
+
+    function end(e) {
+      if (activePointer === null || e.pointerId !== activePointer) return;
+      if (btn.hasPointerCapture(activePointer)) {
+        btn.releasePointerCapture(activePointer);
+      }
+      activePointer = null;
+      onEnd();
+    }
+
+    btn.addEventListener("pointerdown", (e) => {
+      if (!state.control) return;
+      if (activePointer !== null) return;
+      activePointer = e.pointerId;
+      btn.setPointerCapture(e.pointerId);
+      onStart();
+      e.preventDefault();
+    });
+    btn.addEventListener("pointerup", end);
+    btn.addEventListener("pointercancel", end);
+    btn.addEventListener("lostpointercapture", end);
+  }
+
+  function ensureTouchHud() {
+    if (touchHud) return;
+    const styleId = "stickman-hud-styles";
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.textContent = `
+        .stickman-hud {
+          position: fixed;
+          inset: 0;
+          z-index: 9999;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+        .stickman-hud.is-visible {
+          opacity: 1;
+        }
+        .stickman-hud-left,
+        .stickman-hud-right {
+          position: fixed;
+          bottom: calc(16px + env(safe-area-inset-bottom));
+          display: flex;
+          gap: 10px;
+          pointer-events: none;
+        }
+        .stickman-hud-left {
+          left: calc(12px + env(safe-area-inset-left));
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        .stickman-hud-right {
+          right: calc(12px + env(safe-area-inset-right));
+          align-items: center;
+        }
+        .stickman-hud-pad {
+          display: flex;
+          gap: 10px;
+          pointer-events: none;
+        }
+        .stickman-hud-btn {
+          pointer-events: auto;
+          min-width: 48px;
+          min-height: 48px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          background: rgba(10, 10, 14, 0.45);
+          color: #fff;
+          font-size: 18px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(6px) saturate(120%);
+          touch-action: none;
+        }
+        .stickman-hud-btn:active {
+          background: rgba(255, 255, 255, 0.15);
+        }
+        .stickman-hud-exit {
+          min-width: 36px;
+          min-height: 36px;
+          font-size: 12px;
+          border-radius: 10px;
+        }
+        .stickman-hud-tip {
+          padding: 6px 8px;
+          font-size: 11px;
+          border-radius: 8px;
+          background: rgba(10, 10, 14, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #f3f3f7;
+          opacity: 0;
+          transform: translateY(4px);
+          transition: opacity 0.2s ease, transform 0.2s ease;
+          pointer-events: none;
+          white-space: nowrap;
+        }
+        .stickman-hud-tip.is-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .stickman-hud {
+            transition: none;
+          }
+          .stickman-hud-tip {
+            transition: none;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    const hud = document.createElement("div");
+    hud.className = "stickman-hud";
+    hud.setAttribute("aria-hidden", "true");
+
+    const leftWrap = document.createElement("div");
+    leftWrap.className = "stickman-hud-left";
+
+    const tip = document.createElement("div");
+    tip.className = "stickman-hud-tip";
+    tip.textContent = "Touch controls enabled";
+    tip.setAttribute("aria-hidden", "true");
+
+    const exitBtn = createHudButton(
+      "Exit",
+      "Exit control mode",
+      "stickman-hud-btn stickman-hud-exit"
+    );
+
+    const pad = document.createElement("div");
+    pad.className = "stickman-hud-pad";
+    const leftBtn = createHudButton("◀", "Move left", "stickman-hud-btn");
+    const rightBtn = createHudButton("▶", "Move right", "stickman-hud-btn");
+    pad.append(leftBtn, rightBtn);
+    leftWrap.append(tip, exitBtn, pad);
+
+    const rightWrap = document.createElement("div");
+    rightWrap.className = "stickman-hud-right";
+    const jumpBtn = createHudButton("⤒", "Jump", "stickman-hud-btn");
+    rightWrap.append(jumpBtn);
+
+    hud.append(leftWrap, rightWrap);
+    document.body.appendChild(hud);
+    touchHud = hud;
+    touchButtons = {
+      left: leftBtn,
+      right: rightBtn,
+      jump: jumpBtn,
+      exit: exitBtn,
+      tip,
+    };
+
+    bindHoldButton(
+      leftBtn,
+      () => {
+        input.left = true;
+      },
+      () => {
+        input.left = false;
+      }
+    );
+    bindHoldButton(
+      rightBtn,
+      () => {
+        input.right = true;
+      },
+      () => {
+        input.right = false;
+      }
+    );
+    bindHoldButton(
+      jumpBtn,
+      () => {
+        input.jump = true;
+        input.jumpHeld = true;
+      },
+      () => {
+        input.jumpHeld = false;
+        input.jump = false;
+        if (state.vy < -JUMP_CUT_SPEED) {
+          state.vy = -JUMP_CUT_SPEED;
+        }
+      }
+    );
+
+    exitBtn.addEventListener("click", () => {
+      setControlMode(false);
+    });
+
+    [leftBtn, rightBtn, jumpBtn, exitBtn].forEach((btn) => {
+      btn.addEventListener("contextmenu", (e) => e.preventDefault());
+    });
+  }
+
+  function showTouchHudHint() {
+    if (!touchButtons || touchHintShown) return;
+    touchHintShown = true;
+    touchButtons.tip.classList.add("is-visible");
+    window.setTimeout(() => {
+      touchButtons.tip.classList.remove("is-visible");
+    }, 2000);
+  }
+
+  function updateTouchHudVisibility() {
+    if (!touchHud && !(state.control && shouldUseTouchHud())) return;
+    if (!touchHud) ensureTouchHud();
+    const visible = state.control && shouldUseTouchHud();
+    touchHud.classList.toggle("is-visible", visible);
+    touchHud.setAttribute("aria-hidden", visible ? "false" : "true");
+    if (touchButtons) {
+      [touchButtons.left, touchButtons.right, touchButtons.jump, touchButtons.exit].forEach(
+        (btn) => {
+          btn.disabled = !visible;
+        }
+      );
+    }
+    if (!visible) {
+      input.left = false;
+      input.right = false;
+      input.jump = false;
+      input.jumpHeld = false;
+      return;
+    }
+    if (isTouchCapable && !touchHintShown) {
+      showTouchHudHint();
+    }
+  }
+
+  function isElementVisible(el) {
+    if (!el || el === stickman || el.closest("#" + STICKMAN_ID)) return false;
+    if (el.hasAttribute("hidden")) return false;
+    const style = window.getComputedStyle(el);
+    if (style.display === "none" || style.visibility === "hidden") return false;
+    if (Number.parseFloat(style.opacity) <= 0.01) return false;
+    return true;
+  }
+
+  // Scan the DOM for visible elements with enough surface area to land on.
+  function refreshPlatforms() {
+    const nodes = document.querySelectorAll(PLATFORM_SELECTORS);
+    const next = [];
+    nodes.forEach((el) => {
+      if (!isElementVisible(el)) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width < MIN_PLATFORM_WIDTH || rect.height < MIN_PLATFORM_HEIGHT)
+        return;
+      if (rect.bottom <= 0 || rect.top >= window.innerHeight) return;
+      if (rect.right <= 0 || rect.left >= window.innerWidth) return;
+      next.push({
+        el,
+        top: rect.top,
+        left: rect.left,
+        right: rect.right,
+        width: rect.width,
+        height: rect.height,
+        centerX: rect.left + rect.width / 2,
+      });
+    });
+    platforms = next;
+
+    if (state.idleTarget && state.idleTarget.el) {
+      const match = platforms.find((p) => p.el === state.idleTarget.el);
+      state.idleTarget = match
+        ? { ...match, expires: state.idleTarget.expires }
+        : null;
+    }
+    if (state.currentPlatform && state.currentPlatform.el) {
+      state.currentPlatform =
+        platforms.find((p) => p.el === state.currentPlatform.el) || null;
+    }
+  }
+
+  let platformRefreshQueued = false;
+  function schedulePlatformRefresh() {
+    if (platformRefreshQueued) return;
+    platformRefreshQueued = true;
+    requestAnimationFrame(() => {
+      platformRefreshQueued = false;
+      refreshPlatforms();
+    });
+  }
+
+  function measureStickman() {
+    const rect = stickman.getBoundingClientRect();
+    state.width = rect.width;
+    state.height = rect.height;
+  }
+
+  function placeInitial() {
+    measureStickman();
+    const maxX = Math.max(0, window.innerWidth - state.width);
+    const maxY = Math.max(0, window.innerHeight - state.height);
+    state.x = clamp(20, 0, maxX);
+    state.y = clamp(window.innerHeight - state.height - 20, 0, maxY);
+  }
+
+  function updateAria() {
+    const label = state.control
+      ? "Click to exit control mode"
+      : "Click to control the stickman";
+    stickman.setAttribute("aria-pressed", state.control ? "true" : "false");
+    stickman.setAttribute("aria-label", label);
+    stickman.title = label;
+  }
+
+  function showHintOnce() {
+    if (hintShown) return;
+    hintShown = true;
+    hint.classList.add("is-visible");
+    window.setTimeout(() => {
+      hint.classList.remove("is-visible");
+    }, 3500);
+  }
+
+  function setControlMode(enabled) {
+    state.control = enabled;
+    stickman.classList.toggle("is-controlled", enabled);
+    updateAria();
+
+    state.behaviorState = "normal";
+    state.vibeName = null;
+    state.vibeUntil = 0;
+    state.pauseUntil = 0;
+    state.stumbleUntil = 0;
+    state.jumpLockedUntil = 0;
+    state.idleVibeEligibleAt = 0;
+    state.animName = "";
+    state.animFrame = 0;
+    state.animNextAt = 0;
+
+    input.left = false;
+    input.right = false;
+    input.sprint = false;
+    input.jump = false;
+    input.jumpHeld = false;
+
+    updateTouchHudVisibility();
+
+    if (enabled) {
+      showHintOnce();
+      startLoop();
+    } else if (idleEnabled) {
+      state.idleTarget = null;
+      state.idleRestUntil = performance.now() + rand(600, 1400);
+      startLoop();
+    } else {
+      stopLoop();
+    }
+  }
+
+  function pickIdleTarget(now) {
+    if (!platforms.length) {
+      state.idleTarget = {
+        el: null,
+        top: getGroundTop(),
+        centerX: window.innerWidth * 0.5,
+        expires: now + IDLE_TARGET_TTL,
+      };
+      return;
+    }
+
+    let candidates = platforms.slice();
+    if (state.currentPlatform && state.currentPlatform.el) {
+      candidates = candidates.filter((p) => p.el !== state.currentPlatform.el);
+    }
+    if (!candidates.length) {
+      candidates = platforms.slice();
+    }
+
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    state.idleTarget = {
+      ...chosen,
+      expires: now + IDLE_TARGET_TTL + rand(0, 4000),
+    };
+  }
+
+  function updateIdle(dt, now) {
+    if (state.behaviorState === "idleVibe" || now < state.pauseUntil) {
+      state.vx = approach(state.vx, 0, IDLE_DECEL * dt);
+      return;
+    }
+    if (state.idleRestUntil > now) {
+      state.vx = approach(state.vx, 0, IDLE_DECEL * dt);
+      return;
+    }
+
+    if (!state.idleTarget || now > state.idleTarget.expires) {
+      pickIdleTarget(now);
+    }
+    const target = state.idleTarget;
+    if (!target) return;
+
+    const desiredX = target.centerX - state.width / 2;
+    const dx = desiredX - state.x;
+    const distance = Math.abs(dx);
+
+    if (distance < 6 && state.onGround) {
+      state.vx = approach(state.vx, 0, IDLE_DECEL * dt);
+      state.idleTarget = null;
+      state.idleRestUntil = now + rand(700, 1600);
+      return;
+    }
+
+    const desiredVx = Math.sign(dx) * IDLE_SPEED;
+    state.vx = approach(state.vx, desiredVx, IDLE_ACCEL * dt);
+
+    if (
+      state.onGround &&
+      target.top < state.y - 10 &&
+      distance < 80 &&
+      now - state.lastIdleJumpAt > 700 &&
+      Math.random() < 0.6
+    ) {
+      state.vy = -IDLE_JUMP_SPEED;
+      state.onGround = false;
+      state.lastIdleJumpAt = now;
+    }
+  }
+
+  function updateControl(dt, now) {
+    const locked = state.behaviorState === "stumble" || now < state.pauseUntil;
+    const maxSpeed = input.sprint ? SPRINT_SPEED : CONTROL_SPEED;
+
+    if (locked) {
+      const decel = state.onGround ? RUN_DECEL : AIR_DECEL;
+      state.vx = approach(state.vx, 0, decel * dt);
+    } else {
+      let move = 0;
+      if (input.left) move -= 1;
+      if (input.right) move += 1;
+
+      if (move !== 0) {
+        const accel = state.onGround ? RUN_ACCEL : RUN_ACCEL * 0.6;
+        state.vx += move * accel * dt;
+      } else {
+        const decel = state.onGround ? RUN_DECEL : AIR_DECEL;
+        if (Math.abs(state.vx) <= decel * dt) {
+          state.vx = 0;
+        } else {
+          state.vx -= Math.sign(state.vx) * decel * dt;
+        }
+      }
+    }
+
+    state.vx = clamp(state.vx, -maxSpeed, maxSpeed);
+
+    if (now < state.jumpLockedUntil) {
+      input.jump = false;
+    }
+    if (input.jump) {
+      if (state.onGround) {
+        state.vy = -JUMP_SPEED;
+        state.onGround = false;
+      }
+      input.jump = false;
+    }
+  }
+
+  // Idle vibe selection + state transitions.
+  function pickIdleVibe() {
+    const total = IDLE_VIBE_CHOICES.reduce((sum, choice) => {
+      return sum + choice.weight;
+    }, 0);
+    let roll = Math.random() * total;
+    for (const choice of IDLE_VIBE_CHOICES) {
+      roll -= choice.weight;
+      if (roll <= 0) return choice.name;
+    }
+    return IDLE_VIBE_CHOICES[0].name;
+  }
+
+  function startIdleVibe(now) {
+    const vibeName = pickIdleVibe();
+    const vibe = IDLE_VIBES[vibeName];
+    state.behaviorState = "idleVibe";
+    state.vibeName = vibeName;
+    state.vibeUntil = now + vibe.duration;
+    state.vibeCooldownUntil =
+      now + rand(IDLE_VIBE_COOLDOWN_MIN, IDLE_VIBE_COOLDOWN_MAX);
+    state.idleVibeEligibleAt = 0;
+    state.animName = "";
+    state.animFrame = 0;
+    state.animNextAt = 0;
+  }
+
+  function endIdleVibe() {
+    state.behaviorState = "normal";
+    state.vibeName = null;
+    state.vibeUntil = 0;
+    state.animName = "";
+    state.animFrame = 0;
+    state.animNextAt = 0;
+  }
+
+  function maybeTriggerIdleVibe(now) {
+    if (reducedMotion || state.control || !idleEnabled) return;
+    if (!state.onGround || Math.abs(state.vx) > 0.5) {
+      state.idleVibeEligibleAt = 0;
+      return;
+    }
+    if (state.behaviorState !== "normal") return;
+    if (now < state.vibeCooldownUntil) return;
+    if (!state.idleVibeEligibleAt) {
+      state.idleVibeEligibleAt =
+        now + rand(IDLE_VIBE_MIN_DELAY, IDLE_VIBE_MAX_DELAY);
+    }
+    if (now >= state.idleVibeEligibleAt) {
+      startIdleVibe(now);
+    }
+  }
+
+  // Rare stumble trigger while running.
+  function startStumble(now) {
+    const duration = reducedMotion ? 220 : STUMBLE_ANIM.duration;
+    state.behaviorState = "stumble";
+    state.stumbleUntil = now + duration;
+    state.stumbleCooldownUntil =
+      now + rand(STUMBLE_COOLDOWN_MIN, STUMBLE_COOLDOWN_MAX);
+    state.jumpLockedUntil = now + duration + STUMBLE_LOCK_EXTRA;
+    state.vx *= 0.3;
+    state.animName = "";
+    state.animFrame = 0;
+    state.animNextAt = 0;
+  }
+
+  function maybeTriggerStumble(now, dt) {
+    if (state.behaviorState !== "normal") return;
+    if (!state.onGround) return;
+    if (state.control && (input.left || input.right)) return;
+    if (Math.abs(state.vx) < 60) return;
+    if (now < state.stumbleCooldownUntil) return;
+    // ~0.5%–1% chance per second while running.
+    const chance = STUMBLE_RATE * dt;
+    if (Math.random() < chance) {
+      startStumble(now);
+    }
+  }
+
+  function findLandingPlatform(prevBottom, nextBottom, nextX) {
+    const pad = Math.min(10, state.width * 0.2);
+    const charLeft = nextX + pad;
+    const charRight = nextX + state.width - pad;
+
+    let best = null;
+    let bestTop = Infinity;
+
+    for (const p of platforms) {
+      if (p.top < prevBottom - 1 || p.top > nextBottom + 1) continue;
+      if (charRight <= p.left + 4 || charLeft >= p.right - 4) continue;
+      if (p.top < bestTop) {
+        bestTop = p.top;
+        best = p;
+      }
+    }
+
+    const groundTop = getGroundTop();
+    if (nextBottom >= groundTop && groundTop < bestTop) {
+      return { top: groundTop, el: null };
+    }
+    return best;
+  }
+
+  // Basic gravity + top-surface collision against platforms and ground.
+  function applyPhysics(dt, now) {
+    const wasOnGround = state.onGround;
+
+    state.vy += GRAVITY * dt;
+    state.vy = Math.min(state.vy, MAX_FALL_SPEED);
+
+    let nextX = state.x + state.vx * dt;
+    let nextY = state.y + state.vy * dt;
+
+    const maxX = Math.max(0, window.innerWidth - state.width);
+    if (nextX < 0 || nextX > maxX) {
+      nextX = clamp(nextX, 0, maxX);
+      state.vx = 0;
+    }
+
+    state.onGround = false;
+    let impactSpeed = 0;
+
+    if (state.vy >= 0) {
+      const prevBottom = state.y + state.height;
+      const nextBottom = nextY + state.height;
+      const landing = findLandingPlatform(prevBottom, nextBottom, nextX);
+
+      if (landing) {
+        impactSpeed = Math.abs(state.vy);
+        nextY = landing.top - state.height;
+        state.vy = 0;
+        state.onGround = true;
+        state.currentPlatform = landing.el ? landing : null;
+      } else {
+        state.currentPlatform = null;
+      }
+    } else {
+      state.currentPlatform = null;
+    }
+
+    const maxY = Math.max(0, window.innerHeight - state.height);
+    state.x = nextX;
+    state.y = clamp(nextY, 0, maxY);
+
+    if (!state.onGround && state.y >= maxY) {
+      impactSpeed = Math.abs(state.vy);
+      state.vy = 0;
+      state.onGround = true;
+    }
+
+    if (!wasOnGround && state.onGround) {
+      const strength = Math.min(1, impactSpeed / MAX_FALL_SPEED);
+      state.landSquashUntil = now + LAND_SQUASH_DURATION;
+      state.landSquashStrength = strength;
+      if (impactSpeed > LAND_DUST_THRESHOLD) {
+        state.dustUntil = now + LAND_DUST_DURATION;
+        state.dustChar = Math.random() < 0.5 ? "." : "*";
+        state.dustSide = state.facing >= 0 ? 1 : -1;
+      }
+    }
+  }
+
+  function updateFacing() {
+    if (state.vx > 5) state.facing = 1;
+    if (state.vx < -5) state.facing = -1;
+  }
+
+  // Animation state selection based on physics.
+  function resolveAnimationName() {
+    if (!state.onGround) {
+      return state.vy < 0 ? "jump" : "fall";
+    }
+    if (Math.abs(state.vx) < 5) return "idle";
+    return state.vx > 0 ? "runRight" : "runLeft";
+  }
+
+  function getActiveAnimation() {
+    if (state.behaviorState === "idleVibe" && state.vibeName) {
+      return {
+        key: "idleVibe:" + state.vibeName,
+        anim: IDLE_VIBES[state.vibeName],
+      };
+    }
+    if (state.behaviorState === "stumble") {
+      const anim = reducedMotion
+        ? { ...STUMBLE_ANIM, duration: 220, frameDuration: 90 }
+        : STUMBLE_ANIM;
+      return { key: "stumble", anim };
+    }
+    const key = resolveAnimationName();
+    return { key, anim: ANIMATIONS[key] };
+  }
+
+  function applyDust(frame, now) {
+    if (now > state.dustUntil) return frame;
+    const lines = frame.split("\n");
+    const lineIndex = lines.length - 1;
+    const line = lines[lineIndex];
+    const pos = state.dustSide > 0 ? Math.max(0, line.length - 2) : 0;
+    const chars = line.split("");
+    chars[pos] = state.dustChar;
+    lines[lineIndex] = chars.join("");
+    return lines.join("\n");
+  }
+
+  function updateArtTransform(now, animName, frameIndex) {
+    let tilt = 0;
+    let bob = 0;
+
+    if (animName === "runRight") {
+      tilt = frameIndex % 2 === 0 ? 2 : -2;
+      bob = frameIndex % 2 === 0 ? 0 : 1;
+    }
+    if (animName === "runLeft") {
+      tilt = frameIndex % 2 === 0 ? -2 : 2;
+      bob = frameIndex % 2 === 0 ? 0 : 1;
+    }
+    if (animName === "jump") {
+      tilt = -2;
+      bob = -1;
+    }
+    if (animName === "fall") {
+      tilt = 2;
+      bob = 1;
+    }
+
+    let scaleX = 1;
+    let scaleY = 1;
+    if (now < state.landSquashUntil) {
+      const t = 1 - (state.landSquashUntil - now) / LAND_SQUASH_DURATION;
+      const ease = 1 - Math.pow(1 - t, 2);
+      const squash = 0.18 * state.landSquashStrength * (1 - ease);
+      scaleY = 1 - squash;
+      scaleX = 1 + squash * 0.6;
+    }
+
+    art.style.transform = `translateY(${bob}px) rotate(${tilt}deg) scale(${
+      scaleX
+    }, ${scaleY})`;
+  }
+
+  // Animation state + frame stepping (decoupled from physics).
+  function updateAnimation(now) {
+    const { key, anim } = getActiveAnimation();
+    if (key !== state.animName) {
+      state.animName = key;
+      state.animFrame = 0;
+      state.animNextAt = now + anim.frameDuration;
+    }
+
+    if (!state.animNextAt) {
+      state.animNextAt = now + anim.frameDuration;
+    }
+
+    if (anim.frames.length > 1 && now >= state.animNextAt) {
+      while (now >= state.animNextAt) {
+        if (state.animFrame < anim.frames.length - 1) {
+          state.animFrame += 1;
+        } else if (anim.loop) {
+          state.animFrame = 0;
+        } else {
+          state.animFrame = anim.frames.length - 1;
+          break;
+        }
+        state.animNextAt += anim.frameDuration;
+      }
+    }
+
+    const frame = applyDust(anim.frames[state.animFrame], now);
+    art.textContent = frame;
+    updateArtTransform(now, state.animName, state.animFrame);
+  }
+
+  function render(now) {
+    stickman.style.transform = `translate3d(${Math.round(
+      state.x
+    )}px, ${Math.round(state.y)}px, 0)`;
+    updateAnimation(now);
+  }
+
+  function step(now) {
+    if (!state.running) return;
+
+    if (!state.control && !idleEnabled) {
+      stopLoop();
+      return;
+    }
+
+    const dt = Math.min(0.05, (now - state.lastTime) / 1000);
+    state.lastTime = now;
+
+    if (state.control) {
+      updateControl(dt, now);
+    } else if (idleEnabled) {
+      updateIdle(dt, now);
+    }
+
+    applyPhysics(dt, now);
+    updateFacing();
+
+    // Idle vibes and stumble state transitions.
+    if (state.behaviorState === "idleVibe") {
+      if (state.control || !state.onGround || now >= state.vibeUntil) {
+        endIdleVibe();
+      }
+    }
+
+    if (state.behaviorState === "stumble") {
+      if (!state.onGround) {
+        state.behaviorState = "normal";
+        state.animName = "";
+        state.animFrame = 0;
+        state.animNextAt = 0;
+      } else if (now >= state.stumbleUntil) {
+        state.behaviorState = "normal";
+        state.animName = "";
+        state.animFrame = 0;
+        state.animNextAt = 0;
+        if (Math.random() < 0.5) {
+          state.pauseUntil = now + STUMBLE_RECOVER_PAUSE;
+        }
+      }
+    }
+
+    if (state.behaviorState === "normal") {
+      maybeTriggerIdleVibe(now);
+      maybeTriggerStumble(now, dt);
+    }
+
+    render(now);
+
+    rafId = requestAnimationFrame(step);
+  }
+
+  function startLoop() {
+    if (state.running) return;
+    state.running = true;
+    state.lastTime = performance.now();
+    rafId = requestAnimationFrame(step);
+  }
+
+  function stopLoop() {
+    if (!state.running) return;
+    state.running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+
+  function handleKeyDown(e) {
+    if (!state.control) return;
+    const key = e.key.toLowerCase();
+
+    if (key === "arrowleft" || key === "a") {
+      input.left = true;
+      e.preventDefault();
+    }
+    if (key === "arrowright" || key === "d") {
+      input.right = true;
+      e.preventDefault();
+    }
+    if (key === "arrowup" || key === "w" || key === " " || key === "spacebar") {
+      input.jump = true;
+      input.jumpHeld = true;
+      e.preventDefault();
+    }
+    if (key === "shift") {
+      input.sprint = true;
+      e.preventDefault();
+    }
+  }
+
+  function handleKeyUp(e) {
+    if (!state.control) return;
+    const key = e.key.toLowerCase();
+
+    if (key === "arrowleft" || key === "a") {
+      input.left = false;
+      e.preventDefault();
+    }
+    if (key === "arrowright" || key === "d") {
+      input.right = false;
+      e.preventDefault();
+    }
+    if (key === "arrowup" || key === "w" || key === " " || key === "spacebar") {
+      input.jumpHeld = false;
+      if (state.vy < -JUMP_CUT_SPEED) {
+        state.vy = -JUMP_CUT_SPEED;
+      }
+      e.preventDefault();
+    }
+    if (key === "shift") {
+      input.sprint = false;
+      e.preventDefault();
+    }
+  }
+
+  function handleResize() {
+    measureStickman();
+    state.x = clamp(state.x, 0, Math.max(0, window.innerWidth - state.width));
+    state.y = clamp(state.y, 0, Math.max(0, window.innerHeight - state.height));
+    schedulePlatformRefresh();
+    updateTouchHudVisibility();
+  }
+
+  stickman.addEventListener("click", () => {
+    setControlMode(!state.control);
+  });
+
+  stickman.addEventListener("keydown", (e) => {
+    if (!state.control) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        setControlMode(true);
+      }
+      return;
+    }
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setControlMode(false);
+    }
+  });
+
+  window.addEventListener("keydown", handleKeyDown);
+  window.addEventListener("keyup", handleKeyUp);
+  window.addEventListener("scroll", schedulePlatformRefresh, { passive: true });
+  window.addEventListener("resize", handleResize, { passive: true });
+
+  if (typeof prefersReducedMotionQuery.addEventListener === "function") {
+    prefersReducedMotionQuery.addEventListener("change", (event) => {
+      reducedMotion = event.matches;
+      idleEnabled = !reducedMotion;
+      if (reducedMotion && state.behaviorState === "idleVibe") {
+        endIdleVibe();
+      }
+      if (!idleEnabled && !state.control) {
+        stopLoop();
+      } else {
+        startLoop();
+      }
+    });
+  } else if (typeof prefersReducedMotionQuery.addListener === "function") {
+    prefersReducedMotionQuery.addListener((event) => {
+      reducedMotion = event.matches;
+      idleEnabled = !reducedMotion;
+      if (reducedMotion && state.behaviorState === "idleVibe") {
+        endIdleVibe();
+      }
+      if (!idleEnabled && !state.control) {
+        stopLoop();
+      } else {
+        startLoop();
+      }
+    });
+  }
+
+  refreshPlatforms();
+  placeInitial();
+  render(performance.now());
+
+  window.setInterval(refreshPlatforms, 1600);
+  window.addEventListener("load", () => {
+    refreshPlatforms();
+    handleResize();
+  });
+
+  if (idleEnabled) {
+    startLoop();
+  }
+})();
