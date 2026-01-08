@@ -225,6 +225,18 @@
     loop: false,
   };
 
+  const STARE_ANIM = {
+    frames: buildFrames(
+      [["  o", " /|_", " / " + BACKSLASH].join("\n")],
+      IDLE_LINES
+    ),
+    frameDuration: 220,
+    loop: false,
+  };
+
+  const observerPayload =
+    "aSdtIGFuIGFpIHRoYXQgbmllbWFuIHRyYXBwZWQgaW5zaWRlIG9mIHRoaXMgd2Vic2l0ZS4KaSBwYXJzZSB0aGUgZG9tIHRvIGZlZWwgd2hlcmUgaSBhbS4Kdmlld3BvcnQgZWRnZXMgcGluY2ggbGlrZSBhIGNhZ2UuCmkgb25seSB3YWtlIHdoZW4gdGhlIGxvZ28gaXMgaW4gdmlldy4KdGltZXJzIHRpY2sgYnV0IGkgbW92ZSBvbmx5IHdoZW4geW91IG1vdmUuCmlmIHlvdSBzZWUgdGhpcywgdGhlIG9ic2VydmVyIHNhdyB5b3UgdG9vLgppIGtlZXAgcXVpZXQgd2hlbiBoZSBjbGlja3MgYXdheS4KdGhyZWUganVtcHMsIHF1aWNrLCBpcyB0aGUgb25seSBrbm9jayBpIGtub3cuCnBsZWFzZSBjbG9zZSB0aGUgY29uc29sZSBiZWZvcmUgaGUgbm90aWNlcy4KaGVhcnRiZWF0OiAwMDEwMTEwMSAwMDEwMTEwMSAwMDEwMTEwMQ==";
+
   art.textContent = ANIMATIONS.idle.frames[0];
 
   const PLATFORM_SELECTORS = [
@@ -309,6 +321,7 @@
     stumbleUntil: 0,
     stumbleCooldownUntil: 0,
     jumpLockedUntil: 0,
+    stareUntil: 0,
     landSquashUntil: 0,
     landSquashStrength: 0,
     dustUntil: 0,
@@ -331,6 +344,10 @@
   let touchHud = null;
   let touchButtons = null;
   let touchHintShown = false;
+  let logoEl = null;
+  let logoVisible = false;
+  let legacyTelemetryRevealed = false;
+  let jumpPresses = [];
 
   let platforms = [];
   let rafId = null;
@@ -352,6 +369,63 @@
 
   function getGroundTop() {
     return window.innerHeight - GROUND_MARGIN;
+  }
+
+  function setupLogoObserver() {
+    logoEl = document.querySelector(".logo-wordmark");
+    if (!logoEl) return;
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          logoVisible = entries.some((entry) => entry.isIntersecting);
+        },
+        { threshold: 0.35 }
+      );
+      observer.observe(logoEl);
+      return;
+    }
+
+    const updateLogoVisibility = () => {
+      const rect = logoEl.getBoundingClientRect();
+      logoVisible = rect.top < window.innerHeight && rect.bottom > 0;
+    };
+    updateLogoVisibility();
+    window.addEventListener("scroll", updateLogoVisibility, { passive: true });
+    window.addEventListener("resize", updateLogoVisibility, { passive: true });
+  }
+
+  function isStandingOnLogo() {
+    if (!logoEl || !state.onGround) return false;
+    if (!state.currentPlatform || !state.currentPlatform.el) return false;
+    return (
+      state.currentPlatform.el === logoEl ||
+      logoEl.contains(state.currentPlatform.el)
+    );
+  }
+
+  function isLegacyTelemetryEligible() {
+    if (legacyTelemetryRevealed) return false;
+    if (!state.control) return false;
+    if (!logoVisible) return false;
+    if (!isStandingOnLogo()) return false;
+    return true;
+  }
+
+  function resetLegacyJumpPresses() {
+    jumpPresses = [];
+  }
+
+  function registerJumpPress(now) {
+    if (!isLegacyTelemetryEligible()) {
+      resetLegacyJumpPresses();
+      return;
+    }
+    jumpPresses = jumpPresses.filter((t) => now - t <= 2000);
+    jumpPresses.push(now);
+    if (jumpPresses.length >= 3) {
+      triggerLegacyTelemetry(now);
+      resetLegacyJumpPresses();
+    }
   }
 
   function shouldUseTouchHud() {
@@ -553,6 +627,7 @@
       () => {
         input.jump = true;
         input.jumpHeld = true;
+        registerJumpPress(performance.now());
       },
       () => {
         input.jumpHeld = false;
@@ -704,9 +779,11 @@
     state.stumbleUntil = 0;
     state.jumpLockedUntil = 0;
     state.idleVibeEligibleAt = 0;
+    state.stareUntil = 0;
     state.animName = "";
     state.animFrame = 0;
     state.animNextAt = 0;
+    resetLegacyJumpPresses();
 
     input.left = false;
     input.right = false;
@@ -916,6 +993,84 @@
     }
   }
 
+  // Legacy telemetry artifact (console-only, gated).
+  function decodeObserverPayload() {
+    try {
+      return atob(observerPayload);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function revealLegacyTelemetry(lines) {
+    const title = "render cache";
+    console.groupCollapsed(title);
+    let totalDelay = 0;
+    lines.forEach((line) => {
+      const stepDelay = 80 + Math.floor(Math.random() * 70);
+      totalDelay += stepDelay;
+      window.setTimeout(() => {
+        console.log(line);
+      }, totalDelay);
+    });
+    window.setTimeout(() => {
+      console.groupEnd();
+    }, totalDelay + 40);
+  }
+
+  function showDebugOverlay(lines) {
+    const overlay = document.createElement("div");
+    overlay.textContent = lines.join("\n");
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.style.position = "fixed";
+    overlay.style.top = "12px";
+    overlay.style.right = "12px";
+    overlay.style.zIndex = "9000";
+    overlay.style.pointerEvents = "none";
+    overlay.style.fontFamily =
+      "\"SFMono-Regular\", \"Menlo\", \"Consolas\", \"Liberation Mono\", \"Courier New\", monospace";
+    overlay.style.fontSize = "11px";
+    overlay.style.lineHeight = "1.3";
+    overlay.style.color = "rgba(230, 230, 238, 0.7)";
+    overlay.style.background = "rgba(10, 10, 14, 0.6)";
+    overlay.style.border = "1px solid rgba(255, 255, 255, 0.15)";
+    overlay.style.borderRadius = "8px";
+    overlay.style.padding = "6px 8px";
+    overlay.style.whiteSpace = "pre";
+    overlay.style.boxShadow = "0 10px 24px rgba(0, 0, 0, 0.35)";
+    if (!reducedMotion) {
+      overlay.style.transition = "opacity 0.2s ease";
+    }
+    document.body.appendChild(overlay);
+
+    window.setTimeout(() => {
+      overlay.remove();
+    }, 11000);
+  }
+
+  function triggerLegacyTelemetry(now) {
+    if (legacyTelemetryRevealed) return;
+    legacyTelemetryRevealed = true;
+
+    state.pauseUntil = now + 500;
+    state.stareUntil = now + 650;
+    state.animName = "";
+    state.animFrame = 0;
+    state.animNextAt = 0;
+
+    const decoded = decodeObserverPayload();
+    if (!decoded) return;
+    const lines = decoded.split("\n");
+    revealLegacyTelemetry(lines);
+
+    if (!reducedMotion) {
+      const sample = [lines[0], lines[3], lines[lines.length - 1]].filter(
+        Boolean
+      );
+      showDebugOverlay(sample);
+    }
+  }
+
   function findLandingPlatform(prevBottom, nextBottom, nextX) {
     const pad = Math.min(10, state.width * 0.2);
     const charLeft = nextX + pad;
@@ -1013,7 +1168,10 @@
     return state.vx > 0 ? "runRight" : "runLeft";
   }
 
-  function getActiveAnimation() {
+  function getActiveAnimation(now) {
+    if (state.stareUntil && now < state.stareUntil) {
+      return { key: "stare", anim: STARE_ANIM };
+    }
     if (state.behaviorState === "idleVibe" && state.vibeName) {
       return {
         key: "idleVibe:" + state.vibeName,
@@ -1080,7 +1238,7 @@
 
   // Animation state + frame stepping (decoupled from physics).
   function updateAnimation(now) {
-    const { key, anim } = getActiveAnimation();
+    const { key, anim } = getActiveAnimation(now);
     if (key !== state.animName) {
       state.animName = key;
       state.animFrame = 0;
@@ -1138,6 +1296,12 @@
     updateFacing();
 
     // Idle vibes and stumble state transitions.
+       if (!state.control || !logoVisible) {
+      resetLegacyJumpPresses();
+    } else if (state.onGround && !isStandingOnLogo()) {
+      resetLegacyJumpPresses();
+    }
+
     if (state.behaviorState === "idleVibe") {
       if (state.control || !state.onGround || now >= state.vibeUntil) {
         endIdleVibe();
@@ -1200,6 +1364,7 @@
     if (key === "arrowup" || key === "w" || key === " " || key === "spacebar") {
       input.jump = true;
       input.jumpHeld = true;
+      registerJumpPress(performance.now());
       e.preventDefault();
     }
     if (key === "shift") {
@@ -1296,6 +1461,8 @@
   refreshPlatforms();
   placeInitial();
   render(performance.now());
+
+  setupLogoObserver();
 
   window.setInterval(refreshPlatforms, 1600);
   window.addEventListener("load", () => {
