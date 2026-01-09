@@ -575,9 +575,11 @@
           pointer-events: none;
           opacity: 0;
           transition: opacity 0.2s ease;
+          background: rgba(0, 0, 0, 0.45);
         }
         .stickman-hud.is-visible {
           opacity: 1;
+          pointer-events: auto;
         }
         .stickman-hud-left,
         .stickman-hud-right {
@@ -594,8 +596,10 @@
           gap: 8px;
         }
         .stickman-hud-right {
-          right: calc(12px + env(safe-area-inset-right));
+          left: 50%;
+          right: auto;
           align-items: center;
+          transform: translateX(-50%);
         }
         .stickman-hud-pad {
           display: flex;
