@@ -111,7 +111,6 @@ const GALLERY_ITEMS = [
   ["assets/gallery/3.webp", "Looking for the next track."],
   ["assets/gallery/7.webp", "At Electric Forest 2025."],
   ["assets/gallery/5.webp", "Memories at The Getaway"],
-  ["assets/gallery/6.webp", "The Pluto Crew and I"],
   // [thumb_or_image_src, caption, optional_video_src]
   [
     "optimized/shell-thumb-720.webp",
