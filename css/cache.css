@@ -1,0 +1,101 @@
+body.cache-page {
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    "Liberation Mono",
+    "Courier New",
+    monospace;
+  color: #ededf2;
+  letter-spacing: 0.02em;
+}
+
+.cache-shell {
+  width: min(720px, 92%);
+  margin: 0 auto;
+  padding: 40px 0 96px;
+}
+
+.cache-back {
+  display: inline-block;
+  margin-bottom: 18px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.cache-back:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.cache-panel {
+  background: rgba(12, 12, 18, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px) saturate(120%);
+}
+
+.cache-title {
+  margin: 0 0 6px;
+  font-size: clamp(1.8rem, 3vw, 2.3rem);
+  text-transform: lowercase;
+  letter-spacing: 0.18em;
+}
+
+.cache-sub {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.cache-section {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.18);
+}
+
+.cache-section h2 {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #c9c9d6;
+}
+
+.cache-section ul {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.6;
+}
+
+.cache-section li {
+  margin: 6px 0;
+}
+
+.cache-links a {
+  color: #d7f2ff;
+  text-decoration: none;
+}
+
+.cache-links a:hover {
+  text-decoration: underline;
+}
+
+.cache-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+  .cache-panel {
+    padding: 20px;
+  }
+
+  .cache-shell {
+    padding: 32px 0 84px;
+  }
+}
