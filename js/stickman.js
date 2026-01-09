@@ -261,6 +261,7 @@
     ".about-hero",
     ".dock-nav",
     ".dock-inner",
+    ".stickman-hud-box",
     ".links-list",
     ".link-btn",
     ".legal-card",
@@ -574,12 +575,24 @@
           z-index: 9999;
           pointer-events: none;
           opacity: 0;
+          visibility: hidden;
           transition: opacity 0.2s ease;
-          background: rgba(0, 0, 0, 0.45);
         }
         .stickman-hud.is-visible {
           opacity: 1;
+          visibility: visible;
+        }
+        .stickman-hud-box {
+          position: fixed;
+          left: calc(12px + env(safe-area-inset-left));
+          right: calc(12px + env(safe-area-inset-right));
+          bottom: calc(8px + env(safe-area-inset-bottom));
+          height: 132px;
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(0, 0, 0, 0.55);
           pointer-events: auto;
+          z-index: 0;
         }
         .stickman-hud-left,
         .stickman-hud-right {
@@ -588,6 +601,7 @@
           display: flex;
           gap: 10px;
           pointer-events: none;
+          z-index: 1;
         }
         .stickman-hud-left {
           left: calc(12px + env(safe-area-inset-left));
@@ -664,6 +678,10 @@
     hud.className = "stickman-hud";
     hud.setAttribute("aria-hidden", "true");
 
+    const box = document.createElement("div");
+    box.className = "stickman-hud-box";
+    box.setAttribute("aria-hidden", "true");
+
     const leftWrap = document.createElement("div");
     leftWrap.className = "stickman-hud-left";
 
@@ -690,7 +708,7 @@
     const jumpBtn = createHudButton("⤒", "Jump", "stickman-hud-btn");
     rightWrap.append(jumpBtn);
 
-    hud.append(leftWrap, rightWrap);
+    hud.append(box, leftWrap, rightWrap);
     document.body.appendChild(hud);
     touchHud = hud;
     touchButtons = {
@@ -760,6 +778,9 @@
     const visible = state.control && shouldUseTouchHud();
     touchHud.classList.toggle("is-visible", visible);
     touchHud.setAttribute("aria-hidden", visible ? "false" : "true");
+    if (visible) {
+      schedulePlatformRefresh();
+    }
     if (touchButtons) {
       [touchButtons.left, touchButtons.right, touchButtons.jump, touchButtons.exit].forEach(
         (btn) => {
