@@ -307,6 +307,22 @@
   const BOMB_MAX_TRIGGERS = 3;
   const BOMB_SHAKE_MIN = 2;
   const BOMB_SHAKE_MAX = 4;
+  const CURSED_SELECTOR = "[data-stickman-cursed=\"delayed\"]";
+  const DEFERRED_FIRE_MIN = 5000;
+  const DEFERRED_FIRE_MAX = 10000;
+  const DEFERRED_COOLDOWN_MIN = 20000;
+  const DEFERRED_COOLDOWN_MAX = 30000;
+  const DEFERRED_MAX_TRIGGERS = 2;
+  const DEFERRED_FORCE_DELAY = 3000;
+  const DEFERRED_NEAR_GROUND_MARGIN = 70;
+  const DEFERRED_NEAR_GROUND_VY = -120;
+  const DEFERRED_DROP_LEAD = 200;
+  const DEFERRED_DROP_GRAVITY = 2400;
+  const DEFERRED_DROP_GLYPH = "[]";
+  const DEFERRED_SLIP_CHANCE = 0.15;
+  const DEFERRED_SLIP_MIN = 600;
+  const DEFERRED_SLIP_MAX = 900;
+  const DEFERRED_SLIP_FRICTION = 0.06;
   const ZONE_SMOOTH_SPEED = 9;
   const INVERT_MIN_DURATION = 400;
   const INVERT_MAX_DURATION = 700;
@@ -357,6 +373,9 @@
     stumbleCooldownUntil: 0,
     jumpLockedUntil: 0,
     inputLockedUntil: 0,
+    slipUntil: 0,
+    slipFriction: 1,
+    slipDirection: 1,
     ragdollUntil: 0,
     shakeUntil: 0,
     shakeMagnitude: 0,
@@ -390,6 +409,7 @@
   let particleLayer = null;
   const reactCooldowns = new WeakMap();
   let hazardTargetEl = null;
+  let cursedTargetEl = null;
   let bombEl = null;
   const bombState = {
     active: false,
@@ -1122,6 +1142,19 @@
     return el === hazardTargetEl || hazardTargetEl.contains(el);
   }
 
+  function setupCursedTarget() {
+    cursedTargetEl = document.querySelector(CURSED_SELECTOR);
+  }
+
+  function isCursedPlatform(el) {
+    if (!cursedTargetEl || !el) return false;
+    return (
+      el === cursedTargetEl ||
+      cursedTargetEl.contains(el) ||
+      el.contains(cursedTargetEl)
+    );
+  }
+
   function ensureBombElement() {
     if (bombEl) return;
     const bomb = document.createElement("pre");
@@ -1253,6 +1286,234 @@
     )}px, ${Math.round(bombState.y)}px, 0)`;
   }
 
+  // Deferred event manager (delayed consequence).
+  function createDeferredEventManager() {
+    const managerState = {
+      armed: false,
+      armedAt: 0,
+      fireAt: 0,
+      forceAt: 0,
+      cooldownUntil: 0,
+      triggers: 0,
+      sourceEl: null,
+      pendingType: null,
+    };
+    const dropState = {
+      active: false,
+      phase: "idle",
+      x: 0,
+      y: 0,
+      vy: 0,
+      width: 0,
+      height: 0,
+      leadUntil: 0,
+      gentle: false,
+    };
+    let dropEl = null;
+
+    function ensureDropElement() {
+      if (dropEl) return dropEl;
+      const layer = ensureParticleLayer();
+      const el = document.createElement("span");
+      el.id = "stickman-deferred-drop";
+      el.setAttribute("aria-hidden", "true");
+      el.textContent = DEFERRED_DROP_GLYPH;
+      el.style.position = "absolute";
+      el.style.left = "0";
+      el.style.top = "0";
+      el.style.zIndex = "9992";
+      el.style.pointerEvents = "none";
+      el.style.fontFamily =
+        "\"SFMono-Regular\", \"Menlo\", \"Consolas\", \"Liberation Mono\", \"Courier New\", monospace";
+      el.style.fontSize = "12px";
+      el.style.lineHeight = "1";
+      el.style.whiteSpace = "pre";
+      el.style.color = "#f6f6fb";
+      el.style.textShadow = "0 1px 2px rgba(0, 0, 0, 0.6)";
+      el.style.transform = "translate3d(0, 0, 0)";
+      el.style.display = "none";
+      layer.appendChild(el);
+      dropEl = el;
+
+      dropEl.style.visibility = "hidden";
+      dropEl.style.display = "block";
+      const rect = dropEl.getBoundingClientRect();
+      dropState.width = rect.width;
+      dropState.height = rect.height;
+      dropEl.style.display = "none";
+      dropEl.style.visibility = "visible";
+      return dropEl;
+    }
+
+    function hideDrop() {
+      if (dropEl) dropEl.style.display = "none";
+      dropState.active = false;
+      dropState.phase = "idle";
+    }
+
+    function canFire(now) {
+      if (bombState.active && bombState.phase === "explode") return false;
+      if (state.behaviorState === "stumble") return false;
+      if (now < state.inputLockedUntil) return false;
+      if (now < state.ragdollUntil) return false;
+      if (now < state.pauseUntil) return false;
+      if (state.onGround) return true;
+      return (
+        state.y + state.height >=
+          getGroundTop() - DEFERRED_NEAR_GROUND_MARGIN &&
+        state.vy >= DEFERRED_NEAR_GROUND_VY
+      );
+    }
+
+    function startDrop(now, gentle) {
+      const el = ensureDropElement();
+      const stickCenterX = state.x + state.width / 2;
+      const offset = rand(-12, 12);
+      dropState.x = clamp(
+        stickCenterX + offset - dropState.width / 2,
+        6,
+        window.innerWidth - dropState.width - 6
+      );
+      dropState.y = -dropState.height - 12;
+      dropState.vy = 0;
+      dropState.leadUntil = now + DEFERRED_DROP_LEAD;
+      dropState.gentle = gentle;
+      dropState.active = true;
+      dropState.phase = "lead";
+      el.style.display = "none";
+    }
+
+    function applyDropImpact(now, gentle) {
+      const stickCenterX = state.x + state.width / 2;
+      const dropCenterX = dropState.x + dropState.width / 2;
+      const dx = stickCenterX - dropCenterX;
+      const power = gentle ? 0.6 : 1;
+      const kickX = clamp(dx * 1.2, -140, 140) * power;
+      const upwardKick = JUMP_SPEED * (gentle ? 0.35 : 0.5);
+
+      state.vx += kickX;
+      state.vy -= upwardKick;
+      state.onGround = false;
+      state.inputLockedUntil = Math.max(
+        state.inputLockedUntil,
+        now + (gentle ? 120 : 180)
+      );
+
+      if (!reducedMotion) {
+        const shake = gentle ? 1 : 1.6;
+        state.shakeUntil = Math.max(state.shakeUntil, now + 110);
+        state.shakeMagnitude = Math.max(state.shakeMagnitude || 0, shake);
+      }
+
+      const count = reducedMotion ? 1 : gentle ? 2 : 3;
+      spawnBurstParticles(
+        dropState.x + dropState.width / 2,
+        dropState.y + dropState.height / 2,
+        count,
+        "rgba(230, 230, 238, 0.7)"
+      );
+    }
+
+    function updateDrop(dt, now) {
+      if (!dropState.active) return;
+      const el = ensureDropElement();
+      if (dropState.phase === "lead") {
+        if (now < dropState.leadUntil) return;
+        dropState.phase = "fall";
+        el.style.display = "block";
+      }
+
+      dropState.vy += DEFERRED_DROP_GRAVITY * dt;
+      dropState.y += dropState.vy * dt;
+
+      const stickCenterX = state.x + state.width / 2;
+      const dropCenterX = dropState.x + dropState.width / 2;
+      const dx = Math.abs(stickCenterX - dropCenterX);
+      const dropBottom = dropState.y + dropState.height;
+      if (
+        dx <= state.width * 0.5 &&
+        dropBottom >= state.y + 2 &&
+        dropState.y <= state.y + state.height
+      ) {
+        applyDropImpact(now, dropState.gentle);
+        hideDrop();
+        return;
+      }
+
+      if (dropState.y > getGroundTop() + 30) {
+        hideDrop();
+        return;
+      }
+
+      el.style.transform = `translate3d(${Math.round(
+        dropState.x
+      )}px, ${Math.round(dropState.y)}px, 0)`;
+    }
+
+    function triggerSlip(now, gentle) {
+      const duration = rand(DEFERRED_SLIP_MIN, DEFERRED_SLIP_MAX);
+      const direction = state.vx !== 0 ? Math.sign(state.vx) : state.facing;
+      const impulse = gentle ? 50 : 80;
+      state.slipUntil = now + duration;
+      state.slipFriction = gentle ? 0.12 : DEFERRED_SLIP_FRICTION;
+      state.slipDirection = direction || 1;
+      state.vx = clamp(
+        state.vx + state.slipDirection * impulse,
+        -SPRINT_SPEED,
+        SPRINT_SPEED
+      );
+    }
+
+    function fire(now, gentle) {
+      if (!managerState.armed) return;
+      const type = managerState.pendingType || "drop";
+      managerState.armed = false;
+      managerState.sourceEl = null;
+      managerState.pendingType = null;
+      managerState.triggers += 1;
+
+      if (type === "slip") {
+        triggerSlip(now, gentle);
+      } else {
+        startDrop(now, gentle);
+      }
+    }
+
+    function arm(triggerEl, now = performance.now()) {
+      if (!triggerEl || !isCursedPlatform(triggerEl)) return;
+      if (managerState.armed) return;
+      if (managerState.triggers >= DEFERRED_MAX_TRIGGERS) return;
+      if (now < managerState.cooldownUntil) return;
+
+      managerState.armed = true;
+      managerState.armedAt = now;
+      managerState.fireAt = now + rand(DEFERRED_FIRE_MIN, DEFERRED_FIRE_MAX);
+      managerState.forceAt = managerState.fireAt + DEFERRED_FORCE_DELAY;
+      managerState.sourceEl = triggerEl;
+      managerState.pendingType =
+        Math.random() < DEFERRED_SLIP_CHANCE ? "slip" : "drop";
+      managerState.cooldownUntil =
+        now + rand(DEFERRED_COOLDOWN_MIN, DEFERRED_COOLDOWN_MAX);
+    }
+
+    function update(now, dt) {
+      updateDrop(dt, now);
+      if (!managerState.armed) return;
+      if (now < managerState.fireAt) return;
+      if (canFire(now)) {
+        fire(now, false);
+        return;
+      }
+      if (now >= managerState.forceAt) {
+        fire(now, true);
+      }
+    }
+
+    return { arm, update, fire };
+  }
+
+  const deferredEventManager = createDeferredEventManager();
+
   function measureStickman() {
     const rect = stickman.getBoundingClientRect();
     state.width = rect.width;
@@ -1354,12 +1615,14 @@
   }
 
   function updateIdle(dt, now) {
+    const slipActive = now < state.slipUntil && state.onGround;
+    const slipFriction = slipActive ? state.slipFriction : 1;
     if (state.behaviorState === "idleVibe" || now < state.pauseUntil) {
-      state.vx = approach(state.vx, 0, IDLE_DECEL * dt);
+      state.vx = approach(state.vx, 0, IDLE_DECEL * slipFriction * dt);
       return;
     }
     if (state.idleRestUntil > now) {
-      state.vx = approach(state.vx, 0, IDLE_DECEL * dt);
+      state.vx = approach(state.vx, 0, IDLE_DECEL * slipFriction * dt);
       return;
     }
 
@@ -1374,7 +1637,7 @@
     const distance = Math.abs(dx);
 
     if (distance < 6 && state.onGround) {
-      state.vx = approach(state.vx, 0, IDLE_DECEL * dt);
+      state.vx = approach(state.vx, 0, IDLE_DECEL * slipFriction * dt);
       state.idleTarget = null;
       state.idleRestUntil = now + rand(700, 1600);
       return;
@@ -1412,9 +1675,11 @@
     const locked =
       state.behaviorState === "stumble" || now < state.pauseUntil || inputLocked;
     const maxSpeed = input.sprint ? SPRINT_SPEED : CONTROL_SPEED;
+    const slipActive = now < state.slipUntil && state.onGround;
+    const slipFriction = slipActive ? state.slipFriction : 1;
 
     if (locked) {
-      const decel = state.onGround ? RUN_DECEL : AIR_DECEL;
+      const decel = (state.onGround ? RUN_DECEL : AIR_DECEL) * slipFriction;
       state.vx = approach(state.vx, 0, decel * dt);
     } else {
       let move = 0;
@@ -1425,7 +1690,7 @@
         const accel = state.onGround ? RUN_ACCEL : RUN_ACCEL * 0.6;
         state.vx += move * accel * dt;
       } else {
-        const decel = state.onGround ? RUN_DECEL : AIR_DECEL;
+        const decel = (state.onGround ? RUN_DECEL : AIR_DECEL) * slipFriction;
         if (Math.abs(state.vx) <= decel * dt) {
           state.vx = 0;
         } else {
@@ -1721,6 +1986,7 @@
       if (landedEl) {
         triggerImpactFeedback(landedEl, impactSpeed, now);
         maybeTriggerBomb(landedEl, landedTop, now);
+        deferredEventManager.arm(landedEl, now);
       }
       if (landedZone && landedZone.type === "heavyGravity") {
         const count = reducedMotion ? 0 : 3;
@@ -1888,6 +2154,7 @@
 
     applyPhysics(dt, now);
     updateBomb(dt, now);
+    deferredEventManager.update(now, dt);
     updateFacing();
 
     // Idle vibes and stumble state transitions.
@@ -2061,6 +2328,7 @@
 
   setupLogoObserver();
   setupHazardTarget();
+  setupCursedTarget();
 
   window.setInterval(refreshPlatforms, 1600);
   window.addEventListener("load", () => {
