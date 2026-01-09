@@ -136,6 +136,9 @@ body.has-dock {
   --muted: #b9b9c4; /* secondary text */
   --accent-1: #a855f7; /* purple */
   --accent-2: #06b6d4; /* cyan */
+  --link: #8fe9ff; /* bright cyan */
+  --link-hover: #c9f8ff;
+  --link-underline: rgba(143, 233, 255, 0.55);
   --shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
   --radius-lg: 22px;
   --radius-md: 16px;
@@ -170,6 +173,17 @@ body {
       rgba(59, 19, 87, 0) 60%
     ),
     linear-gradient(180deg, var(--bg-2), var(--bg-1) 35%, var(--bg-3));
+}
+
+a {
+  color: var(--link);
+  text-decoration-color: var(--link-underline);
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: var(--link-hover);
+  text-decoration-color: var(--link-hover);
 }
 
 .site-bg {
@@ -532,7 +546,7 @@ body {
   text-align: center;
 }
 .tiny-link {
-  color: #cfd0ff;
+  color: var(--link);
   text-decoration: none;
   font-size: 0.9rem;
   opacity: 0.85;

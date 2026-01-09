@@ -77,7 +77,7 @@ body.cache-page {
 }
 
 .cache-links a {
-  color: #d7f2ff;
+  color: var(--link);
   text-decoration: none;
 }
 
