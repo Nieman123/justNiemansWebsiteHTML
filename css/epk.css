@@ -1,0 +1,260 @@
+:root {
+  --epk-bg-1: #0b0713;
+  --epk-bg-2: #1d0f2e;
+  --epk-card: rgba(16, 16, 22, 0.88);
+  --epk-border: rgba(255, 255, 255, 0.1);
+  --epk-text: #f1f1f6;
+  --epk-muted: #c8c8d8;
+  --epk-accent: #a855f7;
+  --epk-link: #91ebff;
+}
+
+.epk-page {
+  margin: 0;
+  color: var(--epk-text);
+  background:
+    radial-gradient(1000px 540px at 12% -12%, #3b1357 0%, rgba(59, 19, 87, 0) 62%),
+    linear-gradient(180deg, var(--epk-bg-2), var(--epk-bg-1));
+}
+
+.epk-shell {
+  width: min(1040px, 92%);
+  margin: 28px auto 42px;
+  display: grid;
+  gap: 18px;
+}
+
+.epk-header {
+  border: 1px solid var(--epk-border);
+  border-radius: 22px;
+  padding: 24px 24px 22px;
+  background: var(--epk-card);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+}
+
+.epk-wordmark {
+  width: min(480px, 100%);
+  height: auto;
+  display: block;
+  margin: 0 0 6px;
+}
+
+.epk-kicker {
+  margin: 0;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: #d9c8f9;
+}
+
+.epk-title {
+  margin: 6px 0 4px;
+  font-family: "Bebas Neue", "Inter", sans-serif;
+  font-size: clamp(40px, 6vw, 64px);
+  letter-spacing: 1px;
+  line-height: 0.95;
+}
+
+.epk-subtitle {
+  margin: 0;
+  font-size: clamp(16px, 2.4vw, 22px);
+  font-weight: 700;
+  color: #ebebf2;
+}
+
+.epk-quick-contact {
+  margin: 12px 0 0;
+  color: var(--epk-muted);
+  font-weight: 600;
+}
+
+.epk-quick-contact span {
+  margin-inline: 8px;
+  color: #a7a7ba;
+}
+
+.epk-card {
+  border: 1px solid var(--epk-border);
+  border-radius: 22px;
+  padding: 20px;
+  background: var(--epk-card);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+}
+
+.epk-card h2 {
+  margin: 0 0 12px;
+  font-size: 23px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.epk-card p {
+  margin: 0 0 12px;
+  line-height: 1.58;
+  color: #efeff5;
+}
+
+.epk-card a {
+  color: var(--epk-link);
+  text-decoration: underline;
+  text-decoration-color: rgba(145, 235, 255, 0.55);
+  text-underline-offset: 0.2em;
+}
+
+.release-grid-epk {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.release-card {
+  background: rgba(12, 12, 18, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.release-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.release-card h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.release-card p {
+  margin: 0 0 8px;
+  color: var(--epk-muted);
+  font-size: 14px;
+}
+
+.subheading {
+  margin: 2px 0 10px;
+  font-size: 17px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.highlight-list,
+.tech-list {
+  margin: 0 0 14px;
+  padding-left: 22px;
+  line-height: 1.5;
+}
+
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.platform-grid a {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 38px;
+  border-radius: 999px;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  text-decoration: none;
+  font-weight: 700;
+  color: #f2eaff;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.photo-grid figure {
+  margin: 0;
+}
+
+.photo-grid img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: block;
+}
+
+.photo-grid figcaption {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--epk-muted);
+}
+
+.subsection-heading {
+  margin-top: 20px;
+}
+
+.epk-footer {
+  text-align: center;
+  color: #b6b6c8;
+  font-size: 13px;
+  padding: 2px 0 10px;
+}
+
+@media (max-width: 900px) {
+  .release-grid-epk {
+    grid-template-columns: 1fr;
+  }
+
+  .platform-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 11mm;
+  }
+
+  html,
+  body {
+    width: 210mm;
+    min-height: 297mm;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .epk-shell {
+    width: 100%;
+    margin: 0;
+    gap: 10px;
+  }
+
+  .epk-card,
+  .epk-header {
+    box-shadow: none;
+  }
+
+  .print-page-break {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .release-card,
+  .photo-grid figure,
+  .platform-grid,
+  .highlight-list,
+  .tech-list {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
