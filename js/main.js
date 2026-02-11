@@ -19,7 +19,25 @@ const GALLERY_ITEMS = [
   const cap = document.getElementById("g-cap");
   const thumbsWrap = document.getElementById("gallery-thumbs");
   const galleryMain = document.querySelector(".gallery-main");
+  const about = document.querySelector(".about-hero");
+  const toggle = document.getElementById("aboutToggle");
   let unmuteBtn;
+
+  let expanded = false;
+  function applyAbout() {
+    if (!about || !toggle) return;
+    about.classList.toggle("expanded", expanded);
+    toggle.textContent = expanded ? "Show Less" : "Show More";
+    toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+  }
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      expanded = !expanded;
+      applyAbout();
+    });
+  }
+
+  if (!mainA || !mainB || !cap || !thumbsWrap || !galleryMain) return;
 
   let i = 0;
   let active = mainA;
@@ -80,32 +98,45 @@ const GALLERY_ITEMS = [
   }
 
   function buildThumbs() {
-    if (!thumbsWrap) return;
     thumbsWrap.innerHTML = "";
     GALLERY_ITEMS.forEach((item, idx) => {
+      const thumbItem = document.createElement("div");
+      thumbItem.className = "thumb-item";
+      thumbItem.setAttribute("role", "listitem");
       const pic = document.createElement("picture");
-      const match = item[0].match(/assets\/gallery\/(\d)\.webp$/);
+      const match = item[0].match(
+        /assets\/gallery\/(\d+)\.(?:webp|avif|png|jpg|jpeg)$/i
+      );
       if (match && match[1] !== "1") {
         const source = document.createElement("source");
         source.type = "image/avif";
         source.srcset = `optimized/gallery-${match[1]}-120.avif`;
         pic.appendChild(source);
       }
+
+      const thumb = document.createElement("button");
+      thumb.type = "button";
+      thumb.className = "thumb" + (idx === i ? " active" : "");
+      thumb.setAttribute(
+        "aria-label",
+        item[2] ? `Play video: ${item[1]}` : `Show image: ${item[1]}`
+      );
+      thumb.setAttribute("aria-pressed", idx === i ? "true" : "false");
+      if (Array.isArray(item) && item[2] && !match) {
+        thumb.dataset.video = item[2];
+        thumb.classList.add("video-thumb");
+      }
+
       const img = new Image();
       img.src = item[0];
-      img.alt = item[1];
-      img.className = "thumb" + (idx === i ? " active" : "");
-      img.setAttribute("role", "listitem");
+      img.alt = "";
       img.loading = "lazy";
       img.decoding = "async";
       img.width = 120;
       img.height = 120;
-      if (Array.isArray(item) && item[2] && !match) {
-        img.dataset.video = item[2];
-        img.classList.add("video-thumb");
-      }
-      img.addEventListener("click", () => {
-        if (img.dataset.video) {
+
+      thumb.addEventListener("click", () => {
+        if (thumb.dataset.video) {
           removeExistingVideo();
           const activeEl = galleryMain.querySelector(".slide-img.is-active");
           if (activeEl) {
@@ -122,7 +153,7 @@ const GALLERY_ITEMS = [
           video.poster = "optimized/shell-thumb-720.webp";
           video.width = 360;
           video.height = 640;
-          video.setAttribute("aria-label", img.alt || "Video");
+          video.setAttribute("aria-label", item[1] || "Video");
           const s1 = document.createElement("source");
           s1.src = "optimized/video/shell-av1.webm";
           s1.type = "video/webm";
@@ -132,14 +163,14 @@ const GALLERY_ITEMS = [
           s2.type = "video/webm";
           video.appendChild(s2);
           const s3 = document.createElement("source");
-          s3.src = img.dataset.video;
+          s3.src = thumb.dataset.video;
           s3.type = "video/mp4";
           video.appendChild(s3);
           galleryMain.appendChild(video);
           showUnmuteBtn(true, true);
           i = idx;
           pauseThenResume();
-          setCaption(img.alt || "");
+          setCaption(item[1] || "");
           markActiveThumb();
         } else {
           removeExistingVideo();
@@ -148,7 +179,9 @@ const GALLERY_ITEMS = [
         }
       });
       pic.appendChild(img);
-      thumbsWrap.appendChild(pic);
+      thumb.appendChild(pic);
+      thumbItem.appendChild(thumb);
+      thumbsWrap.appendChild(thumbItem);
     });
   }
 
@@ -188,9 +221,10 @@ const GALLERY_ITEMS = [
   }
 
   function markActiveThumb() {
-    if (!thumbsWrap) return;
     thumbsWrap.querySelectorAll(".thumb").forEach((el, idx) => {
-      el.classList.toggle("active", idx === i);
+      const isActive = idx === i;
+      el.classList.toggle("active", isActive);
+      el.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
   }
 
@@ -240,25 +274,8 @@ const GALLERY_ITEMS = [
     }, 30000);
   }
 
-  // About toggle (starts collapsed; button stays visible)
-  const about = document.querySelector(".about-hero");
-  const toggle = document.getElementById("aboutToggle");
-  let expanded = false;
-  function applyAbout() {
-    if (!about || !toggle) return;
-    about.classList.toggle("expanded", expanded);
-    toggle.textContent = expanded ? "Show Less" : "Show More";
-    toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
-  }
-
   renderInitial();
   startTimer();
-  if (toggle) {
-    toggle.addEventListener("click", () => {
-      expanded = !expanded;
-      applyAbout();
-    });
-  }
 })();
 
 // Track site interaction events with Google Analytics
@@ -267,6 +284,7 @@ document.addEventListener("click", (e) => {
   if (!el || typeof gtag !== "function") return;
   let label =
     el.getAttribute("href") ||
+    el.getAttribute("aria-label") ||
     el.getAttribute("alt") ||
     el.id ||
     (el.textContent || "").trim();

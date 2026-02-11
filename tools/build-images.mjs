@@ -24,8 +24,25 @@ if (!files.length) {
 for (const file of files) {
   const relDir = dirname(file).replace(/^assets\/?/, ''); // keep subfolders
   const base = basename(file, extname(file));
+  let sourceWidth = 0;
 
-  for (const w of SIZES) {
+  try {
+    const metadata = await sharp(file).metadata();
+    sourceWidth = metadata.width || 0;
+  } catch (err) {
+    console.error(pc.red('✗'), `Unable to read metadata for ${file}:`, err.message);
+  }
+
+  const candidateSizes = sourceWidth
+    ? SIZES.filter((w) => w <= sourceWidth)
+    : [...SIZES];
+  const targetSizes = candidateSizes.length
+    ? candidateSizes
+    : sourceWidth
+      ? [sourceWidth]
+      : [...SIZES];
+
+  for (const w of targetSizes) {
     const basePipe = sharp(file).resize({ width: w, withoutEnlargement: true });
     for (const [fmt, opts] of Object.entries(formats)) {
       const outDir = join(OUT_DIR, relDir);
