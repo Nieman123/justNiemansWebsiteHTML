@@ -13,6 +13,1265 @@ const GALLERY_ITEMS = [
   ],
 ];
 
+const DEFAULT_SITE_CONTENT = Object.freeze({
+  homepage: {
+    events: [],
+    releases: [
+      {
+        id: "release-levitate",
+        title: "LEVITATE (JUST NIEMAN REMIX)",
+        imageUrl: "assets/levitate.webp",
+        imageAlt: "Cover art for SYITE - Levitate (Just Nieman Remix)",
+        linkUrl:
+          "https://soundcloud.com/just-nieman/syite-levitate-just-nieman-remix",
+        linkLabel: "CLICK TO LISTEN",
+      },
+      {
+        id: "release-its-not-that-deep",
+        title: "IT'S NOT THAT DEEP",
+        imageUrl: "assets/its-not-that-deep.webp",
+        imageAlt: "Cover art for It's Not That Deep",
+        linkUrl:
+          "https://distrokid.com/hyperfollow/justnieman/its-not-that-deep",
+        linkLabel: "CLICK TO LISTEN",
+      },
+      {
+        id: "release-norf-flip",
+        title: "NORF (JUST NIEMAN FLIP)",
+        imageUrl: "assets/norf-flip.png",
+        imageAlt: "Cover art for NORF (Just Nieman Flip)",
+        linkUrl: "https://soundcloud.com/just-nieman/norf-flip",
+        linkLabel: "CLICK TO LISTEN",
+      },
+      {
+        id: "release-my-music",
+        title: "MY MUSIC",
+        imageUrl: "assets/my-music.webp",
+        imageAlt: "Cover art for My Music",
+        linkUrl: "https://distrokid.com/hyperfollow/justnieman/my-music",
+        linkLabel: "CLICK TO LISTEN",
+      },
+      {
+        id: "release-lives",
+        title: "LIVES",
+        imageUrl: "assets/lives.webp",
+        imageAlt: "Cover art for Lives",
+        linkUrl: "https://distrokid.com/hyperfollow/justnieman/lives",
+        linkLabel: "CLICK TO LISTEN",
+      },
+      {
+        id: "release-personal",
+        title: "PERSONAL",
+        imageUrl: "assets/personal.webp",
+        imageAlt: "Cover art for Personal",
+        linkUrl: "https://distrokid.com/hyperfollow/justnieman/personal",
+        linkLabel: "CLICK TO LISTEN",
+      },
+    ],
+  },
+  links: {
+    items: [
+      {
+        id: "link-soundcloud",
+        label: "SoundCloud",
+        url: "https://soundcloud.com/just-nieman",
+        imageUrl: "assets/soundcloud-logo.png",
+        imageAlt: "SoundCloud",
+        variant: "icon",
+      },
+      {
+        id: "link-instagram",
+        label: "Follow me on Insta",
+        url: "https://instagram.com/justnieman",
+        imageUrl: "assets/Instagram.webp",
+        imageAlt: "Instagram",
+        variant: "icon",
+      },
+      {
+        id: "link-levitate",
+        label: 'Stream "SYITE - LEVITATE (Just Nieman Remix)"',
+        url: "https://soundcloud.com/just-nieman/syite-levitate-just-nieman-remix",
+        imageUrl: "assets/levitate.webp",
+        imageAlt: "SYITE - LEVITATE (Just Nieman Remix) cover",
+        variant: "artwork",
+      },
+      {
+        id: "link-its-not-that-deep",
+        label: 'Stream "It\'s Not That Deep"',
+        url: "https://distrokid.com/hyperfollow/justnieman/its-not-that-deep",
+        imageUrl: "assets/its-not-that-deep.webp",
+        imageAlt: "It's Not That Deep cover",
+        variant: "artwork",
+      },
+      {
+        id: "link-my-music",
+        label: 'Stream "My Music"',
+        url: "https://distrokid.com/hyperfollow/justnieman/my-music",
+        imageUrl: "assets/my-music.webp",
+        imageAlt: "My Music cover",
+        variant: "artwork",
+      },
+      {
+        id: "link-personal",
+        label: 'Stream "Personal"',
+        url: "https://distrokid.com/hyperfollow/justnieman/personal",
+        imageUrl: "assets/personal.webp",
+        imageAlt: "Personal cover",
+        variant: "artwork",
+      },
+      {
+        id: "link-lives",
+        label: 'Stream "Lives"',
+        url: "https://distrokid.com/hyperfollow/justnieman/lives",
+        imageUrl: "assets/lives.webp",
+        imageAlt: "Lives cover",
+        variant: "artwork",
+      },
+    ],
+  },
+});
+
+const FIREBASE_SDK_VERSION = "10.12.5";
+
+const ADMIN_SECTION_CONFIG = Object.freeze({
+  events: {
+    itemLabel: "Event",
+    listId: "adminEventsList",
+    addButtonId: "addEventBtn",
+    saveButtonId: "saveEventsBtn",
+    statusId: "eventsSaveStatus",
+    emptyText: "No upcoming events yet. Add one to publish it on the homepage.",
+    createEmptyItem: () => ({
+      id: createItemId("event"),
+      title: "",
+      date: "",
+      venue: "",
+      location: "",
+      note: "",
+      linkUrl: "",
+      linkLabel: "Get tickets",
+    }),
+    normalize: normalizeEventItem,
+    finalize: finalizeEventItem,
+    isBlank: isEventBlank,
+    validate(item, index) {
+      if (!item.title) {
+        return `Event ${index + 1} needs a title.`;
+      }
+      if (!item.date) {
+        return `Event ${index + 1} needs a date.`;
+      }
+      return "";
+    },
+    save: (db, items) =>
+      getHomepageDoc(db).set(
+        {
+          events: items,
+          updatedAt: getServerTimestamp(),
+        },
+        { merge: true }
+      ),
+    fields: [
+      {
+        key: "title",
+        label: "Event title",
+        placeholder: "Warehouse set with Pluto Events",
+        wide: true,
+      },
+      {
+        key: "date",
+        label: "Date",
+        placeholder: "April 12, 2026",
+      },
+      {
+        key: "venue",
+        label: "Venue",
+        placeholder: "Eulogy",
+      },
+      {
+        key: "location",
+        label: "Location",
+        placeholder: "Asheville, NC",
+      },
+      {
+        key: "linkLabel",
+        label: "Button label",
+        placeholder: "Get tickets",
+      },
+      {
+        key: "linkUrl",
+        label: "Ticket or event URL",
+        type: "url",
+        placeholder: "https://...",
+        wide: true,
+      },
+      {
+        key: "note",
+        label: "Note",
+        type: "textarea",
+        rows: 3,
+        placeholder: "Optional details for the card.",
+        wide: true,
+      },
+    ],
+  },
+  releases: {
+    itemLabel: "Release",
+    listId: "adminReleasesList",
+    addButtonId: "addReleaseBtn",
+    saveButtonId: "saveReleasesBtn",
+    statusId: "releasesSaveStatus",
+    emptyText: "No releases published yet. Add one to populate the homepage.",
+    createEmptyItem: () => ({
+      id: createItemId("release"),
+      title: "",
+      imageUrl: "",
+      imageAlt: "",
+      linkUrl: "",
+      linkLabel: "CLICK TO LISTEN",
+    }),
+    normalize: normalizeReleaseItem,
+    finalize: finalizeReleaseItem,
+    isBlank: isReleaseBlank,
+    validate(item, index) {
+      if (!item.title) {
+        return `Release ${index + 1} needs a title.`;
+      }
+      if (!item.imageUrl) {
+        return `Release ${index + 1} needs an image path or URL.`;
+      }
+      if (!item.linkUrl) {
+        return `Release ${index + 1} needs a listen URL.`;
+      }
+      return "";
+    },
+    save: (db, items) =>
+      getHomepageDoc(db).set(
+        {
+          releases: items,
+          updatedAt: getServerTimestamp(),
+        },
+        { merge: true }
+      ),
+    fields: [
+      {
+        key: "title",
+        label: "Release title",
+        placeholder: "NEW TRACK",
+        wide: true,
+      },
+      {
+        key: "imageUrl",
+        label: "Artwork path or URL",
+        type: "url",
+        placeholder: "assets/my-release.webp",
+        wide: true,
+      },
+      {
+        key: "imageAlt",
+        label: "Artwork alt text",
+        placeholder: "Cover art for New Track",
+        wide: true,
+      },
+      {
+        key: "linkLabel",
+        label: "Button label",
+        placeholder: "CLICK TO LISTEN",
+      },
+      {
+        key: "linkUrl",
+        label: "Listen URL",
+        type: "url",
+        placeholder: "https://...",
+        wide: true,
+      },
+    ],
+  },
+  links: {
+    itemLabel: "Link",
+    listId: "adminLinksList",
+    addButtonId: "addLinkBtn",
+    saveButtonId: "saveLinksBtn",
+    statusId: "linksSaveStatus",
+    emptyText: "No links configured yet. Add one to populate /links.",
+    createEmptyItem: () => ({
+      id: createItemId("link"),
+      label: "",
+      url: "",
+      imageUrl: "",
+      imageAlt: "",
+      variant: "artwork",
+    }),
+    normalize: normalizeLinkItem,
+    finalize: finalizeLinkItem,
+    isBlank: isLinkBlank,
+    validate(item, index) {
+      if (!item.label) {
+        return `Link ${index + 1} needs a label.`;
+      }
+      if (!item.url) {
+        return `Link ${index + 1} needs a URL.`;
+      }
+      if (!item.imageUrl) {
+        return `Link ${index + 1} needs an image path or URL.`;
+      }
+      return "";
+    },
+    save: (db, items) =>
+      getLinksDoc(db).set(
+        {
+          items,
+          updatedAt: getServerTimestamp(),
+        },
+        { merge: true }
+      ),
+    fields: [
+      {
+        key: "label",
+        label: "Link label",
+        placeholder: 'Stream "New Release"',
+        wide: true,
+      },
+      {
+        key: "url",
+        label: "Destination URL",
+        type: "url",
+        placeholder: "https://...",
+        wide: true,
+      },
+      {
+        key: "imageUrl",
+        label: "Image path or URL",
+        type: "url",
+        placeholder: "assets/cover.webp",
+        wide: true,
+      },
+      {
+        key: "imageAlt",
+        label: "Image alt text",
+        placeholder: "Release cover",
+        wide: true,
+      },
+      {
+        key: "variant",
+        label: "Image style",
+        type: "select",
+        options: [
+          { value: "artwork", label: "Artwork" },
+          { value: "icon", label: "Icon" },
+        ],
+      },
+    ],
+  },
+});
+
+function cloneDefaults() {
+  return JSON.parse(JSON.stringify(DEFAULT_SITE_CONTENT));
+}
+
+function trimString(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function createItemId(prefix) {
+  if (window.crypto && typeof window.crypto.randomUUID === "function") {
+    return `${prefix}-${window.crypto.randomUUID()}`;
+  }
+  return `${prefix}-${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
+}
+
+function normalizeEventItem(item = {}) {
+  return {
+    id: trimString(item.id) || createItemId("event"),
+    title: trimString(item.title),
+    date: trimString(item.date),
+    venue: trimString(item.venue),
+    location: trimString(item.location),
+    note: trimString(item.note),
+    linkUrl: trimString(item.linkUrl),
+    linkLabel: trimString(item.linkLabel),
+  };
+}
+
+function finalizeEventItem(item = {}) {
+  const normalized = normalizeEventItem(item);
+  return {
+    ...normalized,
+    linkLabel: normalized.linkLabel || "Get tickets",
+  };
+}
+
+function normalizeReleaseItem(item = {}) {
+  return {
+    id: trimString(item.id) || createItemId("release"),
+    title: trimString(item.title),
+    imageUrl: trimString(item.imageUrl),
+    imageAlt: trimString(item.imageAlt),
+    linkUrl: trimString(item.linkUrl),
+    linkLabel: trimString(item.linkLabel),
+  };
+}
+
+function finalizeReleaseItem(item = {}) {
+  const normalized = normalizeReleaseItem(item);
+  return {
+    ...normalized,
+    imageAlt: normalized.imageAlt || `Cover art for ${normalized.title}`,
+    linkLabel: normalized.linkLabel || "CLICK TO LISTEN",
+  };
+}
+
+function normalizeLinkItem(item = {}) {
+  return {
+    id: trimString(item.id) || createItemId("link"),
+    label: trimString(item.label),
+    url: trimString(item.url),
+    imageUrl: trimString(item.imageUrl),
+    imageAlt: trimString(item.imageAlt),
+    variant: trimString(item.variant) === "icon" ? "icon" : "artwork",
+  };
+}
+
+function finalizeLinkItem(item = {}) {
+  const normalized = normalizeLinkItem(item);
+  return {
+    ...normalized,
+    imageAlt: normalized.imageAlt || normalized.label,
+  };
+}
+
+function isEventBlank(item) {
+  return (
+    !item.title &&
+    !item.date &&
+    !item.venue &&
+    !item.location &&
+    !item.note &&
+    !item.linkUrl &&
+    (!item.linkLabel || item.linkLabel === "Get tickets")
+  );
+}
+
+function isReleaseBlank(item) {
+  return (
+    !item.title &&
+    !item.imageUrl &&
+    !item.imageAlt &&
+    !item.linkUrl &&
+    (!item.linkLabel || item.linkLabel === "CLICK TO LISTEN")
+  );
+}
+
+function isLinkBlank(item) {
+  return !item.label && !item.url && !item.imageUrl && !item.imageAlt;
+}
+
+function canRenderEvent(item) {
+  return Boolean(item.title && item.date);
+}
+
+function canRenderRelease(item) {
+  return Boolean(item.title && item.imageUrl && item.linkUrl);
+}
+
+function canRenderLink(item) {
+  return Boolean(item.label && item.url && item.imageUrl);
+}
+
+function createElement(tagName, className, text) {
+  const el = document.createElement(tagName);
+  if (className) {
+    el.className = className;
+  }
+  if (typeof text === "string") {
+    el.textContent = text;
+  }
+  return el;
+}
+
+function setAnchorDestination(anchor, url) {
+  const href = trimString(url);
+  anchor.href = href || "#";
+  if (/^https?:\/\//i.test(href)) {
+    anchor.target = "_blank";
+    anchor.rel = "noopener";
+  } else {
+    anchor.removeAttribute("target");
+    anchor.removeAttribute("rel");
+  }
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      if (existing.dataset.loaded === "true") {
+        resolve(existing);
+        return;
+      }
+      existing.addEventListener("load", () => resolve(existing), { once: true });
+      existing.addEventListener(
+        "error",
+        () => reject(new Error(`Failed to load script: ${src}`)),
+        { once: true }
+      );
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.addEventListener(
+      "load",
+      () => {
+        script.dataset.loaded = "true";
+        resolve(script);
+      },
+      { once: true }
+    );
+    script.addEventListener(
+      "error",
+      () => reject(new Error(`Failed to load script: ${src}`)),
+      { once: true }
+    );
+    document.head.appendChild(script);
+  });
+}
+
+function canUseHostedFirebase() {
+  const { hostname } = window.location;
+  return (
+    hostname === "just.niemans.website" ||
+    hostname.endsWith(".web.app") ||
+    hostname.endsWith(".firebaseapp.com")
+  );
+}
+
+function loadFirebaseSdk() {
+  if (
+    window.firebase &&
+    Array.isArray(window.firebase.apps) &&
+    window.firebase.apps.length
+  ) {
+    return Promise.resolve(window.firebase);
+  }
+
+  if (!canUseHostedFirebase()) {
+    return Promise.resolve(null);
+  }
+
+  if (window.__justNiemanFirebasePromise) {
+    return window.__justNiemanFirebasePromise;
+  }
+
+  const base = `/__/firebase/${FIREBASE_SDK_VERSION}`;
+
+  window.__justNiemanFirebasePromise = loadScript(
+    `${base}/firebase-app-compat.js`
+  )
+    .then(() =>
+      Promise.all([
+        loadScript(`${base}/firebase-auth-compat.js`),
+        loadScript(`${base}/firebase-firestore-compat.js`),
+      ])
+    )
+    .then(() => loadScript("/__/firebase/init.js"))
+    .then(() => {
+      if (
+        window.firebase &&
+        Array.isArray(window.firebase.apps) &&
+        window.firebase.apps.length
+      ) {
+        return window.firebase;
+      }
+      return null;
+    })
+    .catch((error) => {
+      console.error("Firebase SDK failed to load.", error);
+      return null;
+    });
+
+  return window.__justNiemanFirebasePromise;
+}
+
+function getServerTimestamp() {
+  if (
+    window.firebase &&
+    window.firebase.firestore &&
+    window.firebase.firestore.FieldValue
+  ) {
+    return window.firebase.firestore.FieldValue.serverTimestamp();
+  }
+  return new Date().toISOString();
+}
+
+function getHomepageDoc(db) {
+  return db.collection("siteContent").doc("homepage");
+}
+
+function getLinksDoc(db) {
+  return db.collection("siteContent").doc("links");
+}
+
+function renderReleaseGrid(items, container) {
+  if (!container) return;
+
+  const releases = items.map(finalizeReleaseItem).filter(canRenderRelease);
+  container.replaceChildren();
+
+  if (!releases.length) {
+    const emptyCard = createElement("article", "card event-card event-empty");
+    emptyCard.appendChild(
+      createElement("p", "event-date", "Fresh releases are on the way.")
+    );
+    emptyCard.appendChild(
+      createElement(
+        "p",
+        "event-note",
+        "Use the admin page to publish new music here."
+      )
+    );
+    container.appendChild(emptyCard);
+    return;
+  }
+
+  releases.forEach((release) => {
+    const article = createElement("article", "card dynamic-card");
+    article.appendChild(createElement("header", "card-header", release.title));
+
+    const img = createElement("img", "card-art");
+    img.src = release.imageUrl;
+    img.alt = release.imageAlt;
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.width = 300;
+    img.height = 300;
+    article.appendChild(img);
+
+    const link = createElement("a", "btn ghost", release.linkLabel);
+    setAnchorDestination(link, release.linkUrl);
+    article.appendChild(link);
+
+    container.appendChild(article);
+  });
+}
+
+function renderEventGrid(items, container) {
+  if (!container) return;
+
+  const events = items.map(finalizeEventItem).filter(canRenderEvent);
+  container.replaceChildren();
+
+  if (!events.length) {
+    const emptyCard = createElement("article", "card event-card event-empty");
+    emptyCard.appendChild(
+      createElement("p", "event-date", "Nothing announced just yet.")
+    );
+    emptyCard.appendChild(
+      createElement(
+        "p",
+        "event-note",
+        "New dates will show up here as soon as they are locked."
+      )
+    );
+    container.appendChild(emptyCard);
+    return;
+  }
+
+  events.forEach((eventItem) => {
+    const article = createElement("article", "card event-card");
+    article.appendChild(createElement("header", "card-header", eventItem.title));
+    article.appendChild(createElement("p", "event-date", eventItem.date));
+
+    if (eventItem.venue) {
+      article.appendChild(createElement("p", "event-venue", eventItem.venue));
+    }
+    if (eventItem.location) {
+      article.appendChild(
+        createElement("p", "event-location muted", eventItem.location)
+      );
+    }
+    if (eventItem.note) {
+      article.appendChild(createElement("p", "event-note", eventItem.note));
+    }
+    if (eventItem.linkUrl) {
+      const link = createElement("a", "btn ghost", eventItem.linkLabel);
+      setAnchorDestination(link, eventItem.linkUrl);
+      article.appendChild(link);
+    }
+
+    container.appendChild(article);
+  });
+}
+
+function renderLinksList(items, container) {
+  if (!container) return;
+
+  const links = items.map(finalizeLinkItem).filter(canRenderLink);
+  container.replaceChildren();
+
+  if (!links.length) {
+    const emptyMessage = createElement(
+      "p",
+      "links-empty",
+      "Fresh links are on the way."
+    );
+    container.appendChild(emptyMessage);
+    return;
+  }
+
+  links.forEach((item) => {
+    const anchor = createElement("a", "link-btn");
+    setAnchorDestination(anchor, item.url);
+
+    const img = createElement(
+      "img",
+      item.variant === "icon" ? "link-ic link-icon" : "link-ic"
+    );
+    img.src = item.imageUrl;
+    img.alt = item.imageAlt;
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.width = item.variant === "icon" ? 64 : 300;
+    img.height = item.variant === "icon" ? 64 : 300;
+    anchor.appendChild(img);
+
+    anchor.appendChild(createElement("span", "", item.label));
+    container.appendChild(anchor);
+  });
+
+  applyLinksPageAttribution(container);
+}
+
+function applyLinksPageAttribution(root = document) {
+  if (!document.body.classList.contains("links-body")) return;
+  const params = new URLSearchParams({
+    utm_source: "links",
+    utm_medium: "website",
+    utm_campaign: "links_page",
+  });
+
+  root.querySelectorAll('a[href^="http"]').forEach((anchor) => {
+    try {
+      const url = new URL(anchor.href);
+      if (!url.searchParams.has("utm_source")) {
+        params.forEach((value, key) => {
+          url.searchParams.set(key, value);
+        });
+        anchor.href = url.toString();
+      }
+    } catch (error) {
+      // Ignore malformed URLs entered in admin until they are fixed.
+    }
+  });
+}
+
+function applyHomepageSnapshot(snapshot) {
+  if (!snapshot || !snapshot.exists) return;
+
+  const data = snapshot.data() || {};
+  const releaseGrid = document.getElementById("releaseGrid");
+  const eventGrid = document.getElementById("eventGrid");
+
+  if (Object.prototype.hasOwnProperty.call(data, "events")) {
+    const events = Array.isArray(data.events) ? data.events : [];
+    renderEventGrid(events.map(normalizeEventItem), eventGrid);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(data, "releases")) {
+    const releases = Array.isArray(data.releases) ? data.releases : [];
+    renderReleaseGrid(releases.map(normalizeReleaseItem), releaseGrid);
+  }
+}
+
+function applyLinksSnapshot(snapshot) {
+  if (!snapshot || !snapshot.exists) return;
+
+  const data = snapshot.data() || {};
+  if (!Object.prototype.hasOwnProperty.call(data, "items")) {
+    return;
+  }
+
+  const linksList = document.getElementById("linksList");
+  const items = Array.isArray(data.items) ? data.items : [];
+  renderLinksList(items.map(normalizeLinkItem), linksList);
+}
+
+async function initPublicFirestoreContent() {
+  const hasHomepageTargets =
+    document.getElementById("eventGrid") || document.getElementById("releaseGrid");
+  const hasLinksTarget = document.getElementById("linksList");
+
+  applyLinksPageAttribution();
+
+  if (!hasHomepageTargets && !hasLinksTarget) {
+    return;
+  }
+
+  const firebaseNamespace = await loadFirebaseSdk();
+  if (
+    !firebaseNamespace ||
+    !firebaseNamespace.firestore ||
+    !Array.isArray(firebaseNamespace.apps) ||
+    !firebaseNamespace.apps.length
+  ) {
+    return;
+  }
+
+  const db = firebaseNamespace.firestore();
+  const requests = [];
+
+  if (hasHomepageTargets) {
+    requests.push(
+      getHomepageDoc(db)
+        .get()
+        .then((snapshot) => {
+          applyHomepageSnapshot(snapshot);
+        })
+        .catch((error) => {
+          console.error("Unable to load homepage content from Firestore.", error);
+        })
+    );
+  }
+
+  if (hasLinksTarget) {
+    requests.push(
+      getLinksDoc(db)
+        .get()
+        .then((snapshot) => {
+          applyLinksSnapshot(snapshot);
+        })
+        .catch((error) => {
+          console.error("Unable to load links content from Firestore.", error);
+        })
+    );
+  }
+
+  await Promise.all(requests);
+}
+
+function getAdminElements() {
+  return {
+    root: document.getElementById("adminApp"),
+    signInBtn: document.getElementById("adminSignIn"),
+    signOutBtn: document.getElementById("adminSignOut"),
+    authStatus: document.getElementById("adminAuthStatus"),
+    sessionMeta: document.getElementById("adminSessionMeta"),
+    editors: document.getElementById("adminEditors"),
+  };
+}
+
+function setStatusMessage(target, text, tone) {
+  if (!target) return;
+  target.textContent = text;
+  target.classList.toggle("is-error", tone === "error");
+  target.classList.toggle("is-success", tone === "success");
+}
+
+function buildAdminField(field, value) {
+  const wrapper = createElement(
+    "label",
+    field.wide ? "admin-field admin-field-wide" : "admin-field"
+  );
+  wrapper.appendChild(createElement("span", "admin-field-label", field.label));
+
+  let input;
+  if (field.type === "textarea") {
+    input = document.createElement("textarea");
+    input.rows = field.rows || 3;
+  } else if (field.type === "select") {
+    input = document.createElement("select");
+    (field.options || []).forEach((option) => {
+      const optionEl = document.createElement("option");
+      optionEl.value = option.value;
+      optionEl.textContent = option.label;
+      input.appendChild(optionEl);
+    });
+  } else {
+    input = document.createElement("input");
+    input.type = field.type || "text";
+  }
+
+  input.name = field.key;
+  input.value = value || "";
+  input.placeholder = field.placeholder || "";
+  input.setAttribute("data-field", "true");
+  wrapper.appendChild(input);
+
+  return wrapper;
+}
+
+function buildAdminItem(kind, item, index, total) {
+  const config = ADMIN_SECTION_CONFIG[kind];
+  const article = createElement("article", "admin-item");
+  article.dataset.index = String(index);
+
+  const idInput = document.createElement("input");
+  idInput.type = "hidden";
+  idInput.name = "id";
+  idInput.value = item.id || createItemId(kind);
+  idInput.setAttribute("data-field", "true");
+  article.appendChild(idInput);
+
+  const top = createElement("div", "admin-item-top");
+  top.appendChild(
+    createElement("h3", "admin-item-title", `${config.itemLabel} ${index + 1}`)
+  );
+
+  const controls = createElement("div", "admin-item-controls");
+  const moveUp = createElement("button", "admin-mini-btn", "Up");
+  moveUp.type = "button";
+  moveUp.dataset.adminAction = "move-up";
+  moveUp.disabled = index === 0;
+  controls.appendChild(moveUp);
+
+  const moveDown = createElement("button", "admin-mini-btn", "Down");
+  moveDown.type = "button";
+  moveDown.dataset.adminAction = "move-down";
+  moveDown.disabled = index === total - 1;
+  controls.appendChild(moveDown);
+
+  const remove = createElement("button", "admin-mini-btn admin-mini-btn-danger", "Remove");
+  remove.type = "button";
+  remove.dataset.adminAction = "remove";
+  controls.appendChild(remove);
+
+  top.appendChild(controls);
+  article.appendChild(top);
+
+  const fieldGrid = createElement("div", "admin-fields");
+  config.fields.forEach((field) => {
+    fieldGrid.appendChild(buildAdminField(field, item[field.key]));
+  });
+  article.appendChild(fieldGrid);
+
+  return article;
+}
+
+function renderAdminList(kind, items) {
+  const config = ADMIN_SECTION_CONFIG[kind];
+  const list = document.getElementById(config.listId);
+  if (!list) return;
+
+  list.replaceChildren();
+
+  if (!items.length) {
+    list.appendChild(createElement("p", "admin-empty", config.emptyText));
+    return;
+  }
+
+  items.forEach((item, index) => {
+    list.appendChild(buildAdminItem(kind, item, index, items.length));
+  });
+}
+
+function collectAdminItems(kind) {
+  const config = ADMIN_SECTION_CONFIG[kind];
+  const list = document.getElementById(config.listId);
+  if (!list) return [];
+
+  const items = [];
+  list.querySelectorAll(".admin-item").forEach((article) => {
+    const payload = {};
+    article.querySelectorAll("[data-field]").forEach((field) => {
+      payload[field.name] = field.value;
+    });
+    items.push(config.normalize(payload));
+  });
+
+  return items;
+}
+
+function renderAllAdminLists(state) {
+  Object.keys(ADMIN_SECTION_CONFIG).forEach((kind) => {
+    renderAdminList(kind, state[kind]);
+  });
+}
+
+function getUserLabel(user) {
+  return user.email || user.displayName || user.uid;
+}
+
+async function loadAdminState(context) {
+  const defaults = cloneDefaults();
+
+  const [homepageSnapshot, linksSnapshot] = await Promise.all([
+    getHomepageDoc(context.db).get(),
+    getLinksDoc(context.db).get(),
+  ]);
+
+  const homepageData = homepageSnapshot.exists ? homepageSnapshot.data() || {} : {};
+  const linksData = linksSnapshot.exists ? linksSnapshot.data() || {} : {};
+
+  context.state.events = Object.prototype.hasOwnProperty.call(
+    homepageData,
+    "events"
+  )
+    ? (Array.isArray(homepageData.events) ? homepageData.events : []).map(
+        normalizeEventItem
+      )
+    : defaults.homepage.events.map(normalizeEventItem);
+
+  context.state.releases = Object.prototype.hasOwnProperty.call(
+    homepageData,
+    "releases"
+  )
+    ? (Array.isArray(homepageData.releases) ? homepageData.releases : []).map(
+        normalizeReleaseItem
+      )
+    : defaults.homepage.releases.map(normalizeReleaseItem);
+
+  context.state.links = Object.prototype.hasOwnProperty.call(linksData, "items")
+    ? (Array.isArray(linksData.items) ? linksData.items : []).map(
+        normalizeLinkItem
+      )
+    : defaults.links.items.map(normalizeLinkItem);
+
+  renderAllAdminLists(context.state);
+}
+
+function syncAdminStateFromDom(kind, context) {
+  context.state[kind] = collectAdminItems(kind);
+}
+
+function reorderItem(items, fromIndex, toIndex) {
+  const copy = items.slice();
+  const [item] = copy.splice(fromIndex, 1);
+  copy.splice(toIndex, 0, item);
+  return copy;
+}
+
+function bindAdminListControls(kind, context) {
+  const config = ADMIN_SECTION_CONFIG[kind];
+  const list = document.getElementById(config.listId);
+  const addButton = document.getElementById(config.addButtonId);
+  const saveButton = document.getElementById(config.saveButtonId);
+  const status = document.getElementById(config.statusId);
+
+  if (!list || !addButton || !saveButton || !status) return;
+
+  list.addEventListener("click", (event) => {
+    const actionButton = event.target.closest("button[data-admin-action]");
+    if (!actionButton) return;
+
+    const itemNode = actionButton.closest(".admin-item");
+    if (!itemNode) return;
+
+    syncAdminStateFromDom(kind, context);
+
+    const index = Number(itemNode.dataset.index);
+    const action = actionButton.dataset.adminAction;
+
+    if (action === "remove") {
+      context.state[kind].splice(index, 1);
+    } else if (action === "move-up" && index > 0) {
+      context.state[kind] = reorderItem(context.state[kind], index, index - 1);
+    } else if (
+      action === "move-down" &&
+      index < context.state[kind].length - 1
+    ) {
+      context.state[kind] = reorderItem(context.state[kind], index, index + 1);
+    }
+
+    renderAdminList(kind, context.state[kind]);
+    setStatusMessage(status, "", "");
+  });
+
+  addButton.addEventListener("click", () => {
+    syncAdminStateFromDom(kind, context);
+    context.state[kind].push(config.createEmptyItem());
+    renderAdminList(kind, context.state[kind]);
+    setStatusMessage(status, "", "");
+  });
+
+  saveButton.addEventListener("click", async () => {
+    if (!context.db || !context.isAuthorized) {
+      setStatusMessage(
+        status,
+        "Sign in with an approved admin account before saving.",
+        "error"
+      );
+      return;
+    }
+
+    const collectedItems = collectAdminItems(kind);
+    const cleanedItems = collectedItems.filter((item) => !config.isBlank(item));
+
+    for (let index = 0; index < cleanedItems.length; index += 1) {
+      const message = config.validate(cleanedItems[index], index);
+      if (message) {
+        setStatusMessage(status, message, "error");
+        return;
+      }
+    }
+
+    const payload = cleanedItems.map(config.finalize);
+    saveButton.disabled = true;
+    setStatusMessage(status, "Saving...", "");
+
+    try {
+      await config.save(context.db, payload);
+      context.state[kind] = payload.map(config.normalize);
+      renderAdminList(kind, context.state[kind]);
+      setStatusMessage(status, "Saved.", "success");
+    } catch (error) {
+      console.error(`Unable to save ${kind}.`, error);
+      setStatusMessage(
+        status,
+        "Save failed. Check Firebase rules and try again.",
+        "error"
+      );
+    } finally {
+      saveButton.disabled = false;
+    }
+  });
+}
+
+async function handleAdminAuthState(user, context, elements) {
+  if (!user) {
+    context.isAuthorized = false;
+    context.state = {
+      events: [],
+      releases: [],
+      links: [],
+    };
+    elements.editors.hidden = true;
+    elements.signInBtn.hidden = false;
+    elements.signOutBtn.hidden = true;
+    setStatusMessage(
+      elements.authStatus,
+      "Sign in with the Google account whose UID is stored as a document ID in adminUsers.",
+      ""
+    );
+    elements.sessionMeta.textContent = "";
+    return;
+  }
+
+  elements.signInBtn.hidden = true;
+  elements.signOutBtn.hidden = false;
+  setStatusMessage(elements.authStatus, "Checking admin access...", "");
+  elements.sessionMeta.textContent = `Signed in as ${getUserLabel(user)}`;
+
+  try {
+    const adminSnapshot = await context.db.collection("adminUsers").doc(user.uid).get();
+    if (!adminSnapshot.exists) {
+      context.isAuthorized = false;
+      elements.editors.hidden = true;
+      setStatusMessage(
+        elements.authStatus,
+        `This account is not allowed yet. Add a Firestore document at adminUsers/${user.uid}.`,
+        "error"
+      );
+      elements.sessionMeta.textContent = `Signed in as ${getUserLabel(
+        user
+      )} | UID: ${user.uid}`;
+      return;
+    }
+
+    context.isAuthorized = true;
+    await loadAdminState(context);
+    elements.editors.hidden = false;
+    setStatusMessage(elements.authStatus, "Admin access confirmed.", "success");
+  } catch (error) {
+    context.isAuthorized = false;
+    elements.editors.hidden = true;
+    console.error("Unable to verify admin access.", error);
+    setStatusMessage(
+      elements.authStatus,
+      "Admin check failed. Verify Firestore rules and Auth setup.",
+      "error"
+    );
+  }
+}
+
+async function initAdminPage() {
+  const elements = getAdminElements();
+  if (!elements.root) return;
+
+  const context = {
+    auth: null,
+    db: null,
+    isAuthorized: false,
+    state: {
+      events: [],
+      releases: [],
+      links: [],
+    },
+  };
+
+  Object.keys(ADMIN_SECTION_CONFIG).forEach((kind) => {
+    bindAdminListControls(kind, context);
+  });
+
+  const firebaseNamespace = await loadFirebaseSdk();
+  if (
+    !firebaseNamespace ||
+    !firebaseNamespace.auth ||
+    !firebaseNamespace.firestore ||
+    !Array.isArray(firebaseNamespace.apps) ||
+    !firebaseNamespace.apps.length
+  ) {
+    elements.signInBtn.disabled = true;
+    setStatusMessage(
+      elements.authStatus,
+      "Firebase Auth is available here only when the site is served from Firebase Hosting.",
+      "error"
+    );
+    return;
+  }
+
+  context.auth = firebaseNamespace.auth();
+  context.db = firebaseNamespace.firestore();
+
+  elements.signInBtn.addEventListener("click", async () => {
+    const provider = new firebaseNamespace.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+
+    try {
+      setStatusMessage(elements.authStatus, "Opening Google sign-in...", "");
+      await context.auth.signInWithPopup(provider);
+    } catch (error) {
+      if (error && error.code === "auth/popup-blocked") {
+        await context.auth.signInWithRedirect(provider);
+        return;
+      }
+      if (error && error.code === "auth/popup-closed-by-user") {
+        setStatusMessage(
+          elements.authStatus,
+          "Sign-in popup was closed before the login finished.",
+          "error"
+        );
+        return;
+      }
+      console.error("Google sign-in failed.", error);
+      setStatusMessage(
+        elements.authStatus,
+        "Google sign-in failed. Check your Firebase Auth provider settings.",
+        "error"
+      );
+    }
+  });
+
+  elements.signOutBtn.addEventListener("click", async () => {
+    try {
+      await context.auth.signOut();
+    } catch (error) {
+      console.error("Unable to sign out.", error);
+      setStatusMessage(
+        elements.authStatus,
+        "Sign-out failed. Refresh and try again.",
+        "error"
+      );
+    }
+  });
+
+  context.auth.onAuthStateChanged((user) => {
+    handleAdminAuthState(user, context, elements);
+  });
+}
+
 (function () {
   const mainA = document.getElementById("g-main-a");
   const mainB = document.getElementById("g-main-b");
@@ -194,7 +1453,6 @@ const GALLERY_ITEMS = [
     }
   }
 
-  // Slide animation swap (right → in, left → out)
   function slideSwap(nextIdx) {
     if (!active || !standby) return;
     const next = GALLERY_ITEMS[nextIdx % GALLERY_ITEMS.length];
@@ -202,7 +1460,7 @@ const GALLERY_ITEMS = [
     standby.classList.remove("is-active", "to-left");
     standby.src = next[0];
     standby.alt = next[1];
-    void standby.offsetWidth; // reflow
+    void standby.offsetWidth;
     standby.classList.add("is-active");
 
     active.classList.remove("is-active");
@@ -278,11 +1536,10 @@ const GALLERY_ITEMS = [
   startTimer();
 })();
 
-// Track site interaction events with Google Analytics
 document.addEventListener("click", (e) => {
   const el = e.target.closest("a, button, .thumb");
   if (!el || typeof gtag !== "function") return;
-  let label =
+  const label =
     el.getAttribute("href") ||
     el.getAttribute("aria-label") ||
     el.getAttribute("alt") ||
@@ -294,31 +1551,6 @@ document.addEventListener("click", (e) => {
   });
 });
 
-// Ensure UTM tagging on Links page
-(function () {
-  if (!document.body.classList.contains("links-body")) return;
-  const params = new URLSearchParams({
-    utm_source: "links",
-    utm_medium: "website",
-    utm_campaign: "links_page",
-  });
-  document.querySelectorAll('.links-list a[href^="http"]').forEach((a) => {
-    try {
-      const u = new URL(a.href);
-      // Only append if not already present
-      if (!u.searchParams.has("utm_source")) {
-        params.forEach((v, k) => {
-          u.searchParams.set(k, v);
-        });
-        a.href = u.toString();
-      }
-    } catch (e) {
-      /* ignore malformed */
-    }
-  });
-})();
-
-// Mobile dock toggle
 (function () {
   const btn = document.getElementById("dockToggle");
   const nav = document.getElementById("dockNav");
@@ -327,10 +1559,13 @@ document.addEventListener("click", (e) => {
     const open = document.body.classList.toggle("dock-open");
     btn.setAttribute("aria-expanded", open);
   });
-  nav.querySelectorAll("a").forEach((a) => {
-    a.addEventListener("click", () => {
+  nav.querySelectorAll("a").forEach((anchor) => {
+    anchor.addEventListener("click", () => {
       document.body.classList.remove("dock-open");
       btn.setAttribute("aria-expanded", "false");
     });
   });
 })();
+
+void initPublicFirestoreContent();
+void initAdminPage();

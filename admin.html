@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Just Nieman Admin</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link
+      rel="icon"
+      href="optimized/just-nieman-logo-inverted-optimized.png"
+      type="image/png"
+    />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      href="https://fonts.gstatic.com/s/inter/v19/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="https://fonts.gstatic.com/s/bebasneue/v15/JTUSjIg69CK48gW7PXoo9Wlhyw.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body class="admin-body">
+    <div class="site-bg"></div>
+
+    <main class="admin-shell" id="adminApp" role="main">
+      <section class="admin-panel admin-hero">
+        <p class="admin-kicker">Just Nieman admin</p>
+        <h1 class="admin-title">Welcome Nieman</h1>
+        <p class="admin-copy">
+          Sign in with Google, verify against Firestore, and update the content
+          shown on the homepage and <code>/links</code>.
+        </p>
+        <p class="admin-copy admin-copy-muted">
+          Access is granted only when your Google-authenticated UID exists as a
+          document ID in the <code>adminUsers</code> collection.
+        </p>
+        <div class="admin-auth-row">
+          <button class="btn pill" id="adminSignIn" type="button">
+            Sign in with Google
+          </button>
+          <button class="btn ghost" id="adminSignOut" type="button" hidden>
+            Sign out
+          </button>
+          <a class="btn ghost" href="/">View site</a>
+          <a class="btn ghost" href="/links">View links</a>
+        </div>
+        <p
+          class="admin-status"
+          id="adminAuthStatus"
+          role="status"
+          aria-live="polite"
+        >
+          Sign in with the Google account whose UID is stored in Firestore.
+        </p>
+        <p class="admin-session" id="adminSessionMeta"></p>
+      </section>
+
+      <section class="admin-editors" id="adminEditors" hidden>
+        <section class="admin-panel" aria-labelledby="admin-events-heading">
+          <div class="admin-panel-head">
+            <h2 class="section-title" id="admin-events-heading">
+              Upcoming Events
+            </h2>
+            <button class="btn ghost" id="addEventBtn" type="button">
+              Add event
+            </button>
+          </div>
+          <p class="admin-copy admin-copy-muted">
+            These cards appear on the homepage.
+          </p>
+          <div class="admin-editor-list" id="adminEventsList"></div>
+          <div class="admin-actions">
+            <button class="btn pill" id="saveEventsBtn" type="button">
+              Save events
+            </button>
+            <p
+              class="admin-inline-status"
+              id="eventsSaveStatus"
+              role="status"
+              aria-live="polite"
+            ></p>
+          </div>
+        </section>
+
+        <section class="admin-panel" aria-labelledby="admin-releases-heading">
+          <div class="admin-panel-head">
+            <h2 class="section-title" id="admin-releases-heading">
+              Music Releases
+            </h2>
+            <button class="btn ghost" id="addReleaseBtn" type="button">
+              Add release
+            </button>
+          </div>
+          <p class="admin-copy admin-copy-muted">
+            These cards appear in the homepage releases section.
+          </p>
+          <div class="admin-editor-list" id="adminReleasesList"></div>
+          <div class="admin-actions">
+            <button class="btn pill" id="saveReleasesBtn" type="button">
+              Save releases
+            </button>
+            <p
+              class="admin-inline-status"
+              id="releasesSaveStatus"
+              role="status"
+              aria-live="polite"
+            ></p>
+          </div>
+        </section>
+
+        <section class="admin-panel" aria-labelledby="admin-links-heading">
+          <div class="admin-panel-head">
+            <h2 class="section-title" id="admin-links-heading">
+              Links Page
+            </h2>
+            <button class="btn ghost" id="addLinkBtn" type="button">
+              Add link
+            </button>
+          </div>
+          <p class="admin-copy admin-copy-muted">
+            These buttons appear on <code>/links</code>.
+          </p>
+          <div class="admin-editor-list" id="adminLinksList"></div>
+          <div class="admin-actions">
+            <button class="btn pill" id="saveLinksBtn" type="button">
+              Save links
+            </button>
+            <p
+              class="admin-inline-status"
+              id="linksSaveStatus"
+              role="status"
+              aria-live="polite"
+            ></p>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="js/background.js" defer></script>
+    <script src="js/main.js" defer></script>
+  </body>
+</html>

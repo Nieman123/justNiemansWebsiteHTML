@@ -279,13 +279,30 @@
 
     <main class="container content" id="content" role="main">
       <section
+        class="events"
+        id="events"
+        aria-labelledby="events-heading"
+        data-stickman-zone="heavyGravity"
+      >
+        <h2 id="events-heading" class="section-title">UPCOMING EVENTS</h2>
+        <div class="event-grid" id="eventGrid">
+          <article class="card event-card event-empty">
+            <p class="event-date">Nothing announced just yet.</p>
+            <p class="event-note">
+              New dates will show up here as soon as they are locked.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section
         class="releases"
         id="releases"
         aria-labelledby="releases-heading"
         data-stickman-zone="heavyGravity"
       >
         <h2 id="releases-heading" class="section-title">NEWEST RELEASES</h2>
-        <div class="release-grid">
+        <div class="release-grid" id="releaseGrid">
           <article class="card">
             <header class="card-header">“LEVITATE (JUST NIEMAN REMIX)”</header>
             <picture>
@@ -556,6 +573,7 @@
           <img src="optimized/just-nieman-logo-inverted-optimized.png" alt="JN" width="32" height="32" decoding="async" />
         </a>
         <div class="dock-links">
+          <a class="pill-link" href="#events">Events</a>
           <a class="pill-link" href="#releases">Releases</a>
           <a class="pill-link" href="#contact">Contact</a>
           <a class="pill-link" href="links.html">Links</a>
