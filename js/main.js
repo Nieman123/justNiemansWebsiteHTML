@@ -141,6 +141,11 @@ const ADMIN_SECTION_CONFIG = Object.freeze({
     saveButtonId: "saveEventsBtn",
     statusId: "eventsSaveStatus",
     emptyText: "No upcoming events yet. Add one to publish it on the homepage.",
+    imageUpload: {
+      folder: "events",
+      buttonLabel: "Upload event image",
+      emptyLabel: "No event image uploaded yet.",
+    },
     createEmptyItem: () => ({
       id: createItemId("event"),
       title: "",
@@ -148,6 +153,8 @@ const ADMIN_SECTION_CONFIG = Object.freeze({
       venue: "",
       location: "",
       note: "",
+      imageUrl: "",
+      imageAlt: "",
       linkUrl: "",
       linkLabel: "Get tickets",
     }),
@@ -194,6 +201,19 @@ const ADMIN_SECTION_CONFIG = Object.freeze({
         placeholder: "Asheville, NC",
       },
       {
+        key: "imageUrl",
+        label: "Event image path or URL",
+        type: "url",
+        placeholder: "https://...",
+        wide: true,
+      },
+      {
+        key: "imageAlt",
+        label: "Event image alt text",
+        placeholder: "Crowd at the warehouse set",
+        wide: true,
+      },
+      {
         key: "linkLabel",
         label: "Button label",
         placeholder: "Get tickets",
@@ -222,6 +242,11 @@ const ADMIN_SECTION_CONFIG = Object.freeze({
     saveButtonId: "saveReleasesBtn",
     statusId: "releasesSaveStatus",
     emptyText: "No releases published yet. Add one to populate the homepage.",
+    imageUpload: {
+      folder: "releases",
+      buttonLabel: "Upload release artwork",
+      emptyLabel: "No release artwork uploaded yet.",
+    },
     createEmptyItem: () => ({
       id: createItemId("release"),
       title: "",
@@ -382,6 +407,15 @@ function createItemId(prefix) {
     .slice(2, 8)}`;
 }
 
+function sanitizeFileName(name) {
+  const cleaned = trimString(name)
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return cleaned || "upload";
+}
+
 function normalizeEventItem(item = {}) {
   return {
     id: trimString(item.id) || createItemId("event"),
@@ -390,6 +424,8 @@ function normalizeEventItem(item = {}) {
     venue: trimString(item.venue),
     location: trimString(item.location),
     note: trimString(item.note),
+    imageUrl: trimString(item.imageUrl),
+    imageAlt: trimString(item.imageAlt),
     linkUrl: trimString(item.linkUrl),
     linkLabel: trimString(item.linkLabel),
   };
@@ -399,6 +435,7 @@ function finalizeEventItem(item = {}) {
   const normalized = normalizeEventItem(item);
   return {
     ...normalized,
+    imageAlt: normalized.imageAlt || `Event image for ${normalized.title}`,
     linkLabel: normalized.linkLabel || "Get tickets",
   };
 }
@@ -449,6 +486,8 @@ function isEventBlank(item) {
     !item.venue &&
     !item.location &&
     !item.note &&
+    !item.imageUrl &&
+    !item.imageAlt &&
     !item.linkUrl &&
     (!item.linkLabel || item.linkLabel === "Get tickets")
   );
@@ -575,6 +614,7 @@ function loadFirebaseSdk() {
       Promise.all([
         loadScript(`${base}/firebase-auth-compat.js`),
         loadScript(`${base}/firebase-firestore-compat.js`),
+        loadScript(`${base}/firebase-storage-compat.js`),
       ])
     )
     .then(() => loadScript("/__/firebase/init.js"))
@@ -682,6 +722,17 @@ function renderEventGrid(items, container) {
 
   events.forEach((eventItem) => {
     const article = createElement("article", "card event-card");
+    if (eventItem.imageUrl) {
+      const img = createElement("img", "event-art");
+      img.src = eventItem.imageUrl;
+      img.alt = eventItem.imageAlt || `Event image for ${eventItem.title}`;
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.width = 720;
+      img.height = 405;
+      article.appendChild(img);
+    }
+
     article.appendChild(createElement("header", "card-header", eventItem.title));
     article.appendChild(createElement("p", "event-date", eventItem.date));
 
@@ -903,7 +954,181 @@ function buildAdminField(field, value) {
   return wrapper;
 }
 
-function buildAdminItem(kind, item, index, total) {
+function renderAdminImagePreview(container, url, alt, emptyLabel) {
+  if (!container) return;
+
+  container.replaceChildren();
+
+  if (!trimString(url)) {
+    container.appendChild(
+      createElement("span", "admin-image-placeholder", emptyLabel)
+    );
+    return;
+  }
+
+  const img = createElement("img", "admin-image-thumb");
+  img.src = url;
+  img.alt = trimString(alt) || "Uploaded image preview";
+  img.loading = "lazy";
+  img.decoding = "async";
+  container.appendChild(img);
+}
+
+function buildAdminImageTools(kind, item, context) {
+  const config = ADMIN_SECTION_CONFIG[kind];
+  if (!config.imageUpload) return null;
+
+  const wrap = createElement("div", "admin-image-tools");
+  wrap.appendChild(
+    createElement("p", "admin-image-tools-label", "Image Upload")
+  );
+
+  const row = createElement("div", "admin-image-tools-row");
+  const preview = createElement("div", "admin-image-preview");
+  preview.setAttribute("data-admin-image-preview", "true");
+  row.appendChild(preview);
+
+  const controls = createElement("div", "admin-image-tools-actions");
+
+  if (context.storage) {
+    const uploadTrigger = createElement(
+      "button",
+      "btn ghost admin-upload-btn",
+      config.imageUpload.buttonLabel
+    );
+    uploadTrigger.type = "button";
+    uploadTrigger.dataset.adminUploadTrigger = "true";
+    uploadTrigger.setAttribute("data-admin-upload-control", "true");
+    controls.appendChild(uploadTrigger);
+
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.hidden = true;
+    fileInput.dataset.adminImageFile = "true";
+    row.appendChild(fileInput);
+  }
+
+  const clearButton = createElement(
+    "button",
+    "admin-mini-btn",
+    "Clear image"
+  );
+  clearButton.type = "button";
+  clearButton.dataset.adminClearImage = "true";
+  clearButton.setAttribute("data-admin-upload-control", "true");
+  controls.appendChild(clearButton);
+
+  row.appendChild(controls);
+  wrap.appendChild(row);
+
+  renderAdminImagePreview(
+    preview,
+    item.imageUrl,
+    item.imageAlt,
+    config.imageUpload.emptyLabel
+  );
+
+  return wrap;
+}
+
+function syncAdminImagePreview(itemNode, kind) {
+  const config = ADMIN_SECTION_CONFIG[kind];
+  if (!config.imageUpload || !itemNode) return;
+
+  const preview = itemNode.querySelector("[data-admin-image-preview]");
+  const imageUrlInput = itemNode.querySelector('input[name="imageUrl"]');
+  const imageAltInput = itemNode.querySelector('input[name="imageAlt"]');
+
+  renderAdminImagePreview(
+    preview,
+    imageUrlInput ? imageUrlInput.value : "",
+    imageAltInput ? imageAltInput.value : "",
+    config.imageUpload.emptyLabel
+  );
+}
+
+function toggleAdminUploadControls(itemNode, disabled) {
+  if (!itemNode) return;
+  itemNode.querySelectorAll("[data-admin-upload-control]").forEach((control) => {
+    control.disabled = disabled;
+  });
+}
+
+async function uploadAdminImage(kind, itemNode, file, context, status) {
+  const config = ADMIN_SECTION_CONFIG[kind];
+  if (!context.storage || !context.isAuthorized) {
+    setStatusMessage(
+      status,
+      "Sign in with an approved admin account before uploading images.",
+      "error"
+    );
+    return;
+  }
+
+  if (!file || !file.type || !file.type.startsWith("image/")) {
+    setStatusMessage(status, "Choose an image file to upload.", "error");
+    return;
+  }
+
+  const idInput = itemNode.querySelector('input[name="id"]');
+  const imageUrlInput = itemNode.querySelector('input[name="imageUrl"]');
+  const imageAltInput = itemNode.querySelector('input[name="imageAlt"]');
+  const titleInput = itemNode.querySelector('input[name="title"]');
+
+  if (!idInput || !imageUrlInput || !imageAltInput) {
+    setStatusMessage(
+      status,
+      "Image upload fields are missing from this item.",
+      "error"
+    );
+    return;
+  }
+
+  if (!trimString(idInput.value)) {
+    idInput.value = createItemId(kind);
+  }
+
+  const storagePath = `site-content/${config.imageUpload.folder}/${idInput.value}/${Date.now()}-${sanitizeFileName(
+    file.name
+  )}`;
+
+  toggleAdminUploadControls(itemNode, true);
+  setStatusMessage(status, "Uploading image...", "");
+
+  try {
+    const snapshot = await context.storage.ref(storagePath).put(file, {
+      contentType: file.type,
+      cacheControl: "public,max-age=31536000,immutable",
+    });
+    imageUrlInput.value = await snapshot.ref.getDownloadURL();
+
+    if (!trimString(imageAltInput.value)) {
+      const title = titleInput ? trimString(titleInput.value) : "";
+      imageAltInput.value = title
+        ? `${config.itemLabel} image for ${title}`
+        : `${config.itemLabel} image`;
+    }
+
+    syncAdminImagePreview(itemNode, kind);
+    setStatusMessage(
+      status,
+      "Image uploaded. Save changes to publish it.",
+      "success"
+    );
+  } catch (error) {
+    console.error(`Unable to upload ${kind} image.`, error);
+    setStatusMessage(
+      status,
+      "Image upload failed. Check Firebase Storage setup and rules.",
+      "error"
+    );
+  } finally {
+    toggleAdminUploadControls(itemNode, false);
+  }
+}
+
+function buildAdminItem(kind, item, index, total, context) {
   const config = ADMIN_SECTION_CONFIG[kind];
   const article = createElement("article", "admin-item");
   article.dataset.index = String(index);
@@ -947,10 +1172,15 @@ function buildAdminItem(kind, item, index, total) {
   });
   article.appendChild(fieldGrid);
 
+  const imageTools = buildAdminImageTools(kind, item, context);
+  if (imageTools) {
+    article.appendChild(imageTools);
+  }
+
   return article;
 }
 
-function renderAdminList(kind, items) {
+function renderAdminList(kind, items, context) {
   const config = ADMIN_SECTION_CONFIG[kind];
   const list = document.getElementById(config.listId);
   if (!list) return;
@@ -963,7 +1193,7 @@ function renderAdminList(kind, items) {
   }
 
   items.forEach((item, index) => {
-    list.appendChild(buildAdminItem(kind, item, index, items.length));
+    list.appendChild(buildAdminItem(kind, item, index, items.length, context));
   });
 }
 
@@ -984,9 +1214,9 @@ function collectAdminItems(kind) {
   return items;
 }
 
-function renderAllAdminLists(state) {
+function renderAllAdminLists(context) {
   Object.keys(ADMIN_SECTION_CONFIG).forEach((kind) => {
-    renderAdminList(kind, state[kind]);
+    renderAdminList(kind, context.state[kind], context);
   });
 }
 
@@ -1029,7 +1259,7 @@ async function loadAdminState(context) {
       )
     : defaults.links.items.map(normalizeLinkItem);
 
-  renderAllAdminLists(context.state);
+  renderAllAdminLists(context);
 }
 
 function syncAdminStateFromDom(kind, context) {
@@ -1053,6 +1283,46 @@ function bindAdminListControls(kind, context) {
   if (!list || !addButton || !saveButton || !status) return;
 
   list.addEventListener("click", (event) => {
+    const uploadTrigger = event.target.closest("button[data-admin-upload-trigger]");
+    if (uploadTrigger) {
+      const itemNode = uploadTrigger.closest(".admin-item");
+      const fileInput = itemNode
+        ? itemNode.querySelector('input[data-admin-image-file="true"]')
+        : null;
+      if (fileInput) {
+        fileInput.click();
+      } else {
+        setStatusMessage(
+          status,
+          "Image uploads are available only when Firebase Storage is ready.",
+          "error"
+        );
+      }
+      return;
+    }
+
+    const clearTrigger = event.target.closest("button[data-admin-clear-image]");
+    if (clearTrigger) {
+      const itemNode = clearTrigger.closest(".admin-item");
+      if (!itemNode) return;
+
+      const imageUrlInput = itemNode.querySelector('input[name="imageUrl"]');
+      const imageAltInput = itemNode.querySelector('input[name="imageAlt"]');
+      if (imageUrlInput) {
+        imageUrlInput.value = "";
+      }
+      if (imageAltInput) {
+        imageAltInput.value = "";
+      }
+      syncAdminImagePreview(itemNode, kind);
+      setStatusMessage(
+        status,
+        "Image cleared. Save changes to publish it.",
+        "success"
+      );
+      return;
+    }
+
     const actionButton = event.target.closest("button[data-admin-action]");
     if (!actionButton) return;
 
@@ -1075,14 +1345,48 @@ function bindAdminListControls(kind, context) {
       context.state[kind] = reorderItem(context.state[kind], index, index + 1);
     }
 
-    renderAdminList(kind, context.state[kind]);
+    renderAdminList(kind, context.state[kind], context);
     setStatusMessage(status, "", "");
+  });
+
+  list.addEventListener("input", (event) => {
+    const target = event.target;
+    if (
+      !target ||
+      !target.matches ||
+      !target.matches(
+        'input[name="imageUrl"], input[name="imageAlt"], input[name="title"]'
+      )
+    ) {
+      return;
+    }
+
+    syncAdminImagePreview(target.closest(".admin-item"), kind);
+  });
+
+  list.addEventListener("change", (event) => {
+    const target = event.target;
+    if (
+      !target ||
+      !target.matches ||
+      !target.matches('input[data-admin-image-file="true"]')
+    ) {
+      return;
+    }
+
+    const [file] = target.files || [];
+    const itemNode = target.closest(".admin-item");
+    if (!itemNode) return;
+
+    void uploadAdminImage(kind, itemNode, file, context, status).finally(() => {
+      target.value = "";
+    });
   });
 
   addButton.addEventListener("click", () => {
     syncAdminStateFromDom(kind, context);
     context.state[kind].push(config.createEmptyItem());
-    renderAdminList(kind, context.state[kind]);
+    renderAdminList(kind, context.state[kind], context);
     setStatusMessage(status, "", "");
   });
 
@@ -1114,7 +1418,7 @@ function bindAdminListControls(kind, context) {
     try {
       await config.save(context.db, payload);
       context.state[kind] = payload.map(config.normalize);
-      renderAdminList(kind, context.state[kind]);
+      renderAdminList(kind, context.state[kind], context);
       setStatusMessage(status, "Saved.", "success");
     } catch (error) {
       console.error(`Unable to save ${kind}.`, error);
@@ -1193,6 +1497,7 @@ async function initAdminPage() {
   const context = {
     auth: null,
     db: null,
+    storage: null,
     isAuthorized: false,
     state: {
       events: [],
@@ -1224,6 +1529,15 @@ async function initAdminPage() {
 
   context.auth = firebaseNamespace.auth();
   context.db = firebaseNamespace.firestore();
+  try {
+    context.storage =
+      typeof firebaseNamespace.storage === "function"
+        ? firebaseNamespace.storage()
+        : null;
+  } catch (error) {
+    console.error("Firebase Storage is not available.", error);
+    context.storage = null;
+  }
 
   elements.signInBtn.addEventListener("click", async () => {
     const provider = new firebaseNamespace.auth.GoogleAuthProvider();

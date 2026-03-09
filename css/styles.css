@@ -482,6 +482,15 @@ a:hover {
   text-align: left;
   min-height: 100%;
 }
+.event-art {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 14px;
+  background: #09090d;
+}
 .event-card .card-header {
   margin-bottom: 8px;
 }
@@ -878,6 +887,53 @@ a:hover {
   gap: 14px;
   margin-top: 16px;
 }
+.admin-image-tools {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.admin-image-tools-label {
+  margin: 0 0 12px;
+  font-weight: 700;
+}
+.admin-image-tools-row {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.admin-image-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.admin-image-placeholder {
+  padding: 14px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.5;
+}
+.admin-image-thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 140px;
+  object-fit: cover;
+}
+.admin-image-tools-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.admin-upload-btn {
+  align-self: flex-start;
+}
 .admin-field {
   display: flex;
   flex-direction: column;
@@ -1054,6 +1110,9 @@ a:hover {
     align-items: stretch;
   }
   .admin-fields {
+    grid-template-columns: 1fr;
+  }
+  .admin-image-tools-row {
     grid-template-columns: 1fr;
   }
   .admin-field-wide {
