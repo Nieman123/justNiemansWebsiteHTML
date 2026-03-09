@@ -757,6 +757,18 @@ a:hover {
 .admin-panel + .admin-panel {
   margin-top: 24px;
 }
+.admin-hero {
+  text-align: center;
+}
+.admin-hero .admin-auth-row {
+  justify-content: center;
+}
+.admin-hero .admin-status,
+.admin-hero .admin-session {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 52ch;
+}
 .admin-kicker {
   margin: 0 0 8px;
   color: var(--muted);
