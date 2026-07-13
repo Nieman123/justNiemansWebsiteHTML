@@ -319,6 +319,11 @@ const ADMIN_SECTION_CONFIG = Object.freeze({
     saveButtonId: "saveLinksBtn",
     statusId: "linksSaveStatus",
     emptyText: "No links configured yet. Add one to populate /links.",
+    imageUpload: {
+      folder: "links",
+      buttonLabel: "Upload artwork or icon",
+      emptyLabel: "Upload square album art or a platform icon.",
+    },
     createEmptyItem: () => ({
       id: createItemId("link"),
       label: "",
@@ -366,9 +371,10 @@ const ADMIN_SECTION_CONFIG = Object.freeze({
       },
       {
         key: "imageUrl",
-        label: "Image path or URL",
+        label: "Image URL",
         type: "url",
-        placeholder: "assets/cover.webp",
+        placeholder: "Filled automatically after upload",
+        helper: "You can also paste a hosted image URL here.",
         wide: true,
       },
       {
@@ -381,6 +387,7 @@ const ADMIN_SECTION_CONFIG = Object.freeze({
         key: "variant",
         label: "Image style",
         type: "select",
+        helper: "Artwork fills the square. Icons keep more breathing room.",
         options: [
           { value: "artwork", label: "Artwork" },
           { value: "icon", label: "Icon" },
@@ -951,13 +958,20 @@ function buildAdminField(field, value) {
   input.setAttribute("data-field", "true");
   wrapper.appendChild(input);
 
+  if (field.helper) {
+    wrapper.appendChild(
+      createElement("span", "admin-field-helper", field.helper)
+    );
+  }
+
   return wrapper;
 }
 
-function renderAdminImagePreview(container, url, alt, emptyLabel) {
+function renderAdminImagePreview(container, url, alt, emptyLabel, variant) {
   if (!container) return;
 
   container.replaceChildren();
+  container.classList.toggle("is-icon", variant === "icon");
 
   if (!trimString(url)) {
     container.appendChild(
@@ -980,7 +994,7 @@ function buildAdminImageTools(kind, item, context) {
 
   const wrap = createElement("div", "admin-image-tools");
   wrap.appendChild(
-    createElement("p", "admin-image-tools-label", "Image Upload")
+    createElement("p", "admin-image-tools-label", "Artwork")
   );
 
   const row = createElement("div", "admin-image-tools-row");
@@ -1003,11 +1017,19 @@ function buildAdminImageTools(kind, item, context) {
 
     const fileInput = document.createElement("input");
     fileInput.type = "file";
-    fileInput.accept = "image/*";
+    fileInput.accept = "image/jpeg,image/png,image/webp,image/avif,image/gif";
     fileInput.hidden = true;
     fileInput.dataset.adminImageFile = "true";
     row.appendChild(fileInput);
   }
+
+  controls.appendChild(
+    createElement(
+      "p",
+      "admin-upload-hint",
+      "Square JPG, PNG, WebP, AVIF, or GIF. Maximum 8 MB."
+    )
+  );
 
   const clearButton = createElement(
     "button",
@@ -1026,7 +1048,8 @@ function buildAdminImageTools(kind, item, context) {
     preview,
     item.imageUrl,
     item.imageAlt,
-    config.imageUpload.emptyLabel
+    config.imageUpload.emptyLabel,
+    item.variant
   );
 
   return wrap;
@@ -1039,12 +1062,14 @@ function syncAdminImagePreview(itemNode, kind) {
   const preview = itemNode.querySelector("[data-admin-image-preview]");
   const imageUrlInput = itemNode.querySelector('input[name="imageUrl"]');
   const imageAltInput = itemNode.querySelector('input[name="imageAlt"]');
+  const variantInput = itemNode.querySelector('[name="variant"]');
 
   renderAdminImagePreview(
     preview,
     imageUrlInput ? imageUrlInput.value : "",
     imageAltInput ? imageAltInput.value : "",
-    config.imageUpload.emptyLabel
+    config.imageUpload.emptyLabel,
+    variantInput ? variantInput.value : "artwork"
   );
 }
 
@@ -1071,10 +1096,20 @@ async function uploadAdminImage(kind, itemNode, file, context, status) {
     return;
   }
 
+  if (file.size > 8 * 1024 * 1024) {
+    setStatusMessage(status, "Choose an image smaller than 8 MB.", "error");
+    return;
+  }
+
   const idInput = itemNode.querySelector('input[name="id"]');
   const imageUrlInput = itemNode.querySelector('input[name="imageUrl"]');
   const imageAltInput = itemNode.querySelector('input[name="imageAlt"]');
-  const titleInput = itemNode.querySelector('input[name="title"]');
+  const titleInput = itemNode.querySelector(
+    'input[name="title"], input[name="label"]'
+  );
+  const uploadTrigger = itemNode.querySelector(
+    "button[data-admin-upload-trigger]"
+  );
 
   if (!idInput || !imageUrlInput || !imageAltInput) {
     setStatusMessage(
@@ -1094,6 +1129,11 @@ async function uploadAdminImage(kind, itemNode, file, context, status) {
   )}`;
 
   toggleAdminUploadControls(itemNode, true);
+  if (uploadTrigger) {
+    uploadTrigger.dataset.defaultLabel = uploadTrigger.textContent;
+    uploadTrigger.textContent = "Uploading...";
+    uploadTrigger.setAttribute("aria-busy", "true");
+  }
   setStatusMessage(status, "Uploading image...", "");
 
   try {
@@ -1125,6 +1165,10 @@ async function uploadAdminImage(kind, itemNode, file, context, status) {
     );
   } finally {
     toggleAdminUploadControls(itemNode, false);
+    if (uploadTrigger) {
+      uploadTrigger.textContent = uploadTrigger.dataset.defaultLabel;
+      uploadTrigger.removeAttribute("aria-busy");
+    }
   }
 }
 
@@ -1141,41 +1185,58 @@ function buildAdminItem(kind, item, index, total, context) {
   article.appendChild(idInput);
 
   const top = createElement("div", "admin-item-top");
-  top.appendChild(
-    createElement("h3", "admin-item-title", `${config.itemLabel} ${index + 1}`)
+  const itemName = trimString(item.label) || trimString(item.title);
+  const title = itemName || `${config.itemLabel} ${index + 1}`;
+  const heading = createElement("div", "admin-item-heading");
+  heading.appendChild(
+    createElement(
+      "span",
+      "admin-item-order",
+      String(index + 1).padStart(2, "0")
+    )
   );
+  heading.appendChild(createElement("h3", "admin-item-title", title));
+  top.appendChild(heading);
 
   const controls = createElement("div", "admin-item-controls");
   const moveUp = createElement("button", "admin-mini-btn", "Up");
   moveUp.type = "button";
   moveUp.dataset.adminAction = "move-up";
   moveUp.disabled = index === 0;
+  moveUp.setAttribute("aria-label", `Move ${title} up`);
   controls.appendChild(moveUp);
 
   const moveDown = createElement("button", "admin-mini-btn", "Down");
   moveDown.type = "button";
   moveDown.dataset.adminAction = "move-down";
   moveDown.disabled = index === total - 1;
+  moveDown.setAttribute("aria-label", `Move ${title} down`);
   controls.appendChild(moveDown);
 
   const remove = createElement("button", "admin-mini-btn admin-mini-btn-danger", "Remove");
   remove.type = "button";
   remove.dataset.adminAction = "remove";
+  remove.setAttribute("aria-label", `Remove ${title}`);
   controls.appendChild(remove);
 
   top.appendChild(controls);
   article.appendChild(top);
 
+  const content = createElement(
+    "div",
+    config.imageUpload ? "admin-item-content has-image" : "admin-item-content"
+  );
+  const imageTools = buildAdminImageTools(kind, item, context);
+  if (imageTools) {
+    content.appendChild(imageTools);
+  }
+
   const fieldGrid = createElement("div", "admin-fields");
   config.fields.forEach((field) => {
     fieldGrid.appendChild(buildAdminField(field, item[field.key]));
   });
-  article.appendChild(fieldGrid);
-
-  const imageTools = buildAdminImageTools(kind, item, context);
-  if (imageTools) {
-    article.appendChild(imageTools);
-  }
+  content.appendChild(fieldGrid);
+  article.appendChild(content);
 
   return article;
 }
@@ -1355,7 +1416,7 @@ function bindAdminListControls(kind, context) {
       !target ||
       !target.matches ||
       !target.matches(
-        'input[name="imageUrl"], input[name="imageAlt"], input[name="title"]'
+        'input[name="imageUrl"], input[name="imageAlt"], input[name="title"], input[name="label"], select[name="variant"]'
       )
     ) {
       return;
@@ -1413,6 +1474,9 @@ function bindAdminListControls(kind, context) {
 
     const payload = cleanedItems.map(config.finalize);
     saveButton.disabled = true;
+    const defaultSaveLabel = saveButton.textContent;
+    saveButton.textContent = "Saving...";
+    saveButton.setAttribute("aria-busy", "true");
     setStatusMessage(status, "Saving...", "");
 
     try {
@@ -1429,6 +1493,8 @@ function bindAdminListControls(kind, context) {
       );
     } finally {
       saveButton.disabled = false;
+      saveButton.textContent = defaultSaveLabel;
+      saveButton.removeAttribute("aria-busy");
     }
   });
 }
@@ -1446,7 +1512,7 @@ async function handleAdminAuthState(user, context, elements) {
     elements.signOutBtn.hidden = true;
     setStatusMessage(
       elements.authStatus,
-      "Sign in with the Google account whose UID is stored as a document ID in adminUsers.",
+      "Sign in with your approved Google account to start editing.",
       ""
     );
     elements.sessionMeta.textContent = "";

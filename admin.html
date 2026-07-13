@@ -31,112 +31,164 @@
     <div class="site-bg"></div>
 
     <main class="admin-shell" id="adminApp" role="main">
-      <section class="admin-panel admin-hero">
-        <p class="admin-kicker">Just Nieman admin</p>
-        <h1 class="admin-title">Welcome Nieman</h1>
-        <div class="admin-auth-row">
-          <button class="btn pill" id="adminSignIn" type="button">
-            Sign in with Google
-          </button>
-          <button class="btn ghost" id="adminSignOut" type="button" hidden>
-            Sign out
-          </button>
-          <a class="btn ghost" href="/">View site</a>
-          <a class="btn ghost" href="/links">View links</a>
+      <header class="admin-topbar">
+        <a class="admin-brand" href="/" aria-label="Just Nieman home">
+          <img
+            src="optimized/just-nieman-logo-inverted-optimized.png"
+            alt=""
+            width="36"
+            height="36"
+          />
+          <span>Just Nieman</span>
+          <span class="admin-brand-tag">Admin</span>
+        </a>
+        <nav class="admin-site-links" aria-label="Preview site content">
+          <a href="/" target="_blank" rel="noopener">Open site</a>
+          <a href="/links" target="_blank" rel="noopener">Open links</a>
+        </nav>
+      </header>
+
+      <section class="admin-welcome" aria-labelledby="admin-title">
+        <div class="admin-welcome-copy">
+          <p class="admin-kicker">Content studio</p>
+          <h1 class="admin-title" id="admin-title">Keep the site current.</h1>
+          <p class="admin-lede">
+            Update your link-in-bio, releases, and show dates from one place.
+          </p>
         </div>
-        <p
-          class="admin-status"
-          id="adminAuthStatus"
-          role="status"
-          aria-live="polite"
-        >
-          Sign in with the Google account whose UID is stored in Firestore.
-        </p>
-        <p class="admin-session" id="adminSessionMeta"></p>
+        <div class="admin-session-panel">
+          <div class="admin-auth-row">
+            <button class="btn pill" id="adminSignIn" type="button">
+              Sign in with Google
+            </button>
+            <button class="btn ghost" id="adminSignOut" type="button" hidden>
+              Sign out
+            </button>
+          </div>
+          <p
+            class="admin-status"
+            id="adminAuthStatus"
+            role="status"
+            aria-live="polite"
+          >
+            Sign in with your approved Google account to start editing.
+          </p>
+          <p class="admin-session" id="adminSessionMeta"></p>
+        </div>
       </section>
 
       <section class="admin-editors" id="adminEditors" hidden>
-        <section class="admin-panel" aria-labelledby="admin-events-heading">
-          <div class="admin-panel-head">
-            <h2 class="section-title" id="admin-events-heading">
-              Upcoming Events
-            </h2>
-            <button class="btn ghost" id="addEventBtn" type="button">
-              Add event
-            </button>
-          </div>
-          <p class="admin-copy admin-copy-muted">
-            These cards appear on the homepage.
-          </p>
-          <div class="admin-editor-list" id="adminEventsList"></div>
-          <div class="admin-actions">
-            <button class="btn pill" id="saveEventsBtn" type="button">
-              Save events
-            </button>
-            <p
-              class="admin-inline-status"
-              id="eventsSaveStatus"
-              role="status"
-              aria-live="polite"
-            ></p>
-          </div>
-        </section>
+        <nav class="admin-section-nav" aria-label="Admin sections">
+          <p class="admin-nav-label">Manage content</p>
+          <a href="#admin-links-panel"><span>01</span> Links page</a>
+          <a href="#admin-releases-panel"><span>02</span> Releases</a>
+          <a href="#admin-events-panel"><span>03</span> Events</a>
+        </nav>
 
-        <section class="admin-panel" aria-labelledby="admin-releases-heading">
-          <div class="admin-panel-head">
-            <h2 class="section-title" id="admin-releases-heading">
-              Music Releases
-            </h2>
-            <button class="btn ghost" id="addReleaseBtn" type="button">
-              Add release
-            </button>
-          </div>
-          <p class="admin-copy admin-copy-muted">
-            These cards appear in the homepage releases section.
-          </p>
-          <div class="admin-editor-list" id="adminReleasesList"></div>
-          <div class="admin-actions">
-            <button class="btn pill" id="saveReleasesBtn" type="button">
-              Save releases
-            </button>
-            <p
-              class="admin-inline-status"
-              id="releasesSaveStatus"
-              role="status"
-              aria-live="polite"
-            ></p>
-          </div>
-        </section>
+        <div class="admin-editor-stack">
+          <section
+            class="admin-panel"
+            id="admin-links-panel"
+            aria-labelledby="admin-links-heading"
+          >
+            <div class="admin-panel-head">
+              <div>
+                <p class="admin-section-number">01 · Link-in-bio</p>
+                <h2 class="section-title" id="admin-links-heading">
+                  Links page
+                </h2>
+                <p class="admin-copy admin-copy-muted">
+                  Add destinations, upload album art or icons, and set the order
+                  visitors see.
+                </p>
+              </div>
+              <button class="btn ghost" id="addLinkBtn" type="button">
+                Add link
+              </button>
+            </div>
+            <div class="admin-editor-list" id="adminLinksList"></div>
+            <div class="admin-actions">
+              <button class="btn pill" id="saveLinksBtn" type="button">
+                Save links
+              </button>
+              <p
+                class="admin-inline-status"
+                id="linksSaveStatus"
+                role="status"
+                aria-live="polite"
+              ></p>
+            </div>
+          </section>
 
-        <section class="admin-panel" aria-labelledby="admin-links-heading">
-          <div class="admin-panel-head">
-            <h2 class="section-title" id="admin-links-heading">
-              Links Page
-            </h2>
-            <button class="btn ghost" id="addLinkBtn" type="button">
-              Add link
-            </button>
-          </div>
-          <p class="admin-copy admin-copy-muted">
-            These buttons appear on <code>/links</code>.
-          </p>
-          <div class="admin-editor-list" id="adminLinksList"></div>
-          <div class="admin-actions">
-            <button class="btn pill" id="saveLinksBtn" type="button">
-              Save links
-            </button>
-            <p
-              class="admin-inline-status"
-              id="linksSaveStatus"
-              role="status"
-              aria-live="polite"
-            ></p>
-          </div>
-        </section>
+          <section
+            class="admin-panel"
+            id="admin-releases-panel"
+            aria-labelledby="admin-releases-heading"
+          >
+            <div class="admin-panel-head">
+              <div>
+                <p class="admin-section-number">02 · Homepage</p>
+                <h2 class="section-title" id="admin-releases-heading">
+                  Music releases
+                </h2>
+                <p class="admin-copy admin-copy-muted">
+                  Publish the release cards shown on the homepage.
+                </p>
+              </div>
+              <button class="btn ghost" id="addReleaseBtn" type="button">
+                Add release
+              </button>
+            </div>
+            <div class="admin-editor-list" id="adminReleasesList"></div>
+            <div class="admin-actions">
+              <button class="btn pill" id="saveReleasesBtn" type="button">
+                Save releases
+              </button>
+              <p
+                class="admin-inline-status"
+                id="releasesSaveStatus"
+                role="status"
+                aria-live="polite"
+              ></p>
+            </div>
+          </section>
+
+          <section
+            class="admin-panel"
+            id="admin-events-panel"
+            aria-labelledby="admin-events-heading"
+          >
+            <div class="admin-panel-head">
+              <div>
+                <p class="admin-section-number">03 · Homepage</p>
+                <h2 class="section-title" id="admin-events-heading">
+                  Upcoming events
+                </h2>
+                <p class="admin-copy admin-copy-muted">
+                  Keep announced dates and ticket links up to date.
+                </p>
+              </div>
+              <button class="btn ghost" id="addEventBtn" type="button">
+                Add event
+              </button>
+            </div>
+            <div class="admin-editor-list" id="adminEventsList"></div>
+            <div class="admin-actions">
+              <button class="btn pill" id="saveEventsBtn" type="button">
+                Save events
+              </button>
+              <p
+                class="admin-inline-status"
+                id="eventsSaveStatus"
+                role="status"
+                aria-live="polite"
+              ></p>
+            </div>
+          </section>
+        </div>
       </section>
     </main>
 
-    <script src="js/background.js" defer></script>
     <script src="js/main.js" defer></script>
   </body>
 </html>

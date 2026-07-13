@@ -12,7 +12,11 @@ service firebase.storage {
 
     match /site-content/{allPaths=**} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, update: if isAdmin() &&
+        request.resource.size <= 8 * 1024 * 1024 &&
+        request.resource.contentType != null &&
+        request.resource.contentType.matches('image/(jpeg|png|webp|avif|gif)');
+      allow delete: if isAdmin();
     }
 
     match /{allPaths=**} {

@@ -17,6 +17,8 @@
       "**/.github/**",
       "tools/**",
       "README.md",
+      "PRODUCT.md",
+      "DESIGN.md",
       "package.json",
       "package-lock.json"
     ],
